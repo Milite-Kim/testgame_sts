@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+	PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.milite.mapper.ComStatusMapper">
+	<select id="getInfo" resultType="com.milite.dto.ComStatusDto">
+		select * from com_status where
+		id = #{id}
+	</select>
+
+	<select id="getBase" resultType="com.milite.dto.BaseStatDto">
+		select * from base_stat where race
+		= #{race}
+	</select>
+
+	<update id="updateStatus"
+		parameterType="com.milite.dto.ComStatusDto">
+		update com_status
+		<set>
+			<if test="curr_hp != null">curr_hp = #{curr_hp},</if>
+			<if test="max_hp != null">max_hp = #{max_hp},</if>
+			<if test="atk != null">atk = #{atk},</if>
+			<if test="def != null">def = #{def},</if>
+			<if test="cri != null">cri = #{cri},</if>
+			<if test="acc != null">acc = #{acc},</if>
+			<if test="eva != null">eva = #{eva},</if>
+			<if test="agi != null">agi = #{agi},</if>
+			<if test="gold != null">gold = #{gold},</if>
+			<if test="curr_exp != null">curr_exp = #{curr_exp}</if>
+			<if test="max_exp != null">max_exp = #{max_exp},</if>
+			<if test="level != null">level = #{level},</if>
+		</set>
+		where id = #{id}
+	</update>
+</mapper>
+	
