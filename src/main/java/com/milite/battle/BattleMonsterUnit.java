@@ -1,6 +1,7 @@
 package com.milite.battle;
 
 import com.milite.battle.abilities.SpecialAbility;
+import com.milite.battle.abilities.SpecialAbilityFactory;
 import com.milite.dto.MonsterDto;
 import java.util.*;
 import lombok.*;

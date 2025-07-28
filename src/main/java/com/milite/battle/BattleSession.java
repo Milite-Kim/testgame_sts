@@ -30,7 +30,7 @@ public class BattleSession {
 			Map.of("Fire", 1.0, "Water", 1.0, "Grass", 1.0, "None", 1.0));
 
 	public BattleResultDto battleTurn(BattleUnit attacker, List<BattleUnit> allUnits, Integer targetIndex,
-			SkillDto skill) {
+			SkillDto skill, BattleContext context) {
 		// 플레이어가 하는 공격처리
 		if (!attacker.getUnitType().equals("Player")) {
 			return new BattleResultDto("잘못된 대상 접근", 0, 0, false, false, null);
@@ -70,19 +70,19 @@ public class BattleSession {
 
 	private void executeAttackByType(String targetType, List<BattleUnit> validTargets, Integer targetIndex,
 			BattleUnit attacker, SkillDto skill, int attackerAtk, String actor, String actorJosa,
-			BattleState battleState) {
+			BattleState battleState, BattleContext context) {
 		switch (targetType) {
 		case "Pick":
 			if (targetIndex < validTargets.size()) {
 				BattleUnit target = validTargets.get(targetIndex);
 				if (target.isAlive()) {
-					executeAttackOnTarget(attacker, target, skill, attackerAtk, actor, actorJosa, battleState);
+					executeAttackOnTarget(attacker, target, skill, attackerAtk, actor, actorJosa, battleState, context);
 				}
 			}
 			break;
 		case "All":
 			validTargets.stream().filter(BattleUnit::isAlive).forEach(target -> executeAttackOnTarget(attacker, target,
-					skill, attackerAtk, actor, actorJosa, battleState));
+					skill, attackerAtk, actor, actorJosa, battleState, context));
 			break;
 		case "Random":
 			List<BattleUnit> aliveTargets = validTargets.stream().filter(BattleUnit::isAlive)
@@ -91,14 +91,14 @@ public class BattleSession {
 			if (!aliveTargets.isEmpty()) {
 				int randomIndex = CommonUtil.Dice(aliveTargets.size());
 				BattleUnit target = aliveTargets.get(randomIndex);
-				executeAttackOnTarget(attacker, target, skill, attackerAtk, actor, actorJosa, battleState);
+				executeAttackOnTarget(attacker, target, skill, attackerAtk, actor, actorJosa, battleState, context);
 			}
 			break;
 		}
 	}
 
 	private void executeAttackOnTarget(BattleUnit attacker, BattleUnit target, SkillDto skill, int attackerAtk,
-			String actor, String actorJosa, BattleState battleState) {
+			String actor, String actorJosa, BattleState battleState, BattleContext context) {
 		int targetLuck = getTargetLuck(target);
 		boolean isHit = isAttacked(targetLuck);
 
