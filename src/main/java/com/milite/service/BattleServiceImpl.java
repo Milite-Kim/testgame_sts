@@ -187,20 +187,6 @@ public class BattleServiceImpl implements BattleService {
 		List<BattleUnit> allUnits = context.getAllUnits();
 		BattleResultDto attackResult = session.battleTurn(player, allUnits, targetIndex, skill, context);
 
-		
-		
-		/*if (attackResult.isHit()) {
-			List<BattleUnit> hitTargets = findHitTargets(allUnits, skill, targetIndex);
-			for (BattleUnit target : hitTargets) {
-				if (target instanceof BattleMonsterUnit && target.isAlive()) {
-					int estimatedDamage = attackResult.getDamage() / hitTargets.size();
-					((BattleMonsterUnit) target).executeOnDefense(player, estimatedDamage, context);
-				}
-			}
-		}*/
-
-		//applySkillStatusEffects(skill, allUnits, targetIndex, actionLogs, session.getCurrentTurn());
-
 		applySkillStatusEffects(skill,allUnits,targetIndex,context);
 		
 		context.executeDelayedActions();
@@ -244,6 +230,7 @@ public class BattleServiceImpl implements BattleService {
 					monster.getName() + KoreanUtil.getJosa(monster.getName(), "이 ", "가 ") + statusName + " 상태로 행동 불가",
 					session.getCurrentTurn()));
 
+			// 턴 종료 시의 특수 행동관련인데, 이 부분은 제거할까도 고민 중
 			if(monster instanceof BattleMonsterUnit) {
 				((BattleMonsterUnit) monster).executeOnTurnEnd(context);
 			}
@@ -257,12 +244,7 @@ public class BattleServiceImpl implements BattleService {
 		}
 
 		List<BattleUnit> allUnits = context.getAllUnits();
-		BattleResultDto attackResult = session.battleTurn(monster, allUnits);
-
-		/*if (monster instanceof BattleMonsterUnit && attackResult.isHit()) {
-			BattleUnit target = findAttackTarget(allUnits, monster);
-			((BattleMonsterUnit) monster).executeOnAttack(target, context);
-		}*/
+		BattleResultDto attackResult = session.battleTurn(monster, allUnits, context);
 
 		if (monster instanceof BattleMonsterUnit) {
 			((BattleMonsterUnit) monster).executeOnTurnEnd(context);
@@ -467,60 +449,6 @@ public class BattleServiceImpl implements BattleService {
 		}
 	}
 
-	//현재 context 측에 일임이 되어있는 상태
-	/*private void applyStatusEffect(BattleUnit target, String statusType, int newTurns, List<BattleLogEntry> logs,
-			int currentTurn) {
-		Map<String, Integer> statusMap = target.getStatusEffects();
-		if (statusMap == null) {
-			statusMap = new HashMap<>();
-			target.setStatusEffects(statusMap);
-		}
-
-		int currentTurns = statusMap.getOrDefault(statusType, 0);
-		String logMessage;
-		boolean applied = false;
-
-		switch (statusType) {
-		case STATUS_BURN:
-			if (newTurns > currentTurns) { // 더 긴 쪽으로 결정
-				statusMap.put(statusType, newTurns);
-				logMessage = target.getName() + KoreanUtil.getJosa(target.getName(), "이 ", "가 ")
-						+ "화상 상태에 걸렸습니다. (남은 시간 : " + newTurns + " 턴)";
-				applied = true;
-			} else {
-				return;
-			}
-			break;
-		case STATUS_POISON:
-			int totalPoisonTurns = currentTurns + newTurns; // 턴 수 합산
-			statusMap.put(statusType, totalPoisonTurns);
-			logMessage = target.getName() + KoreanUtil.getJosa(target.getName(), "이 ", "가 ") + "중독 상태에 걸렸습니다. (남은 시간 : "
-					+ totalPoisonTurns + " 턴)";
-			applied = true;
-			break;
-		case STATUS_FREEZE:
-		case STATUS_STUN:
-			if (newTurns > currentTurns) { // 더 긴 쪽으로 결정
-				statusMap.put(statusType, newTurns);
-				String statusName = statusType.equals(STATUS_FREEZE) ? "빙결" : "기절";
-				logMessage = target.getName() + KoreanUtil.getJosa(target.getName(), "이 ", "가 ") + statusName
-						+ " 상태에 걸렸습니다. (남은 시간 : " + newTurns + " 턴)";
-				applied = true;
-			} else {
-				return;
-			}
-			break;
-		default:
-			return;
-		}
-		if (applied) {
-			logs.add(new BattleLogEntry(target.getName(), "Status_Applied", logMessage, currentTurn));
-			log.info(logMessage);
-		} else {
-			log.debug(logMessage);
-		}
-	}*/
-
 	private boolean isUnitDisabled(BattleUnit unit) { // 유닛이 행동 불가인가?
 		Map<String, Integer> statusMap = unit.getStatusEffects();
 		if (statusMap == null) {
@@ -611,31 +539,6 @@ public class BattleServiceImpl implements BattleService {
 		session.setCurrentActionIndex(nextIndex);
 	}
 
-	// 현재 context에 위임된 상태
-	/*private List<BattleUnit> findHitTargets(List<BattleUnit> allUnits, SkillDto skill, Integer targetIndex) {
-		List<BattleUnit> targets = new ArrayList<>();
-		List<BattleUnit> validTargets = allUnits.stream()
-				.filter(unit -> !unit.getUnitType().equals("Player") && unit.isAlive()).collect(Collectors.toList());
-
-		switch (skill.getTarget()) {
-		case "Pick":
-			if (targetIndex != null && targetIndex < validTargets.size()) {
-				targets.add(validTargets.get(targetIndex));
-			}
-			break;
-		case "All":
-			targets.addAll(validTargets);
-			break;
-		case "Random":
-			if (!validTargets.isEmpty()) {
-				int randomIndex = CommonUtil.Dice(validTargets.size()) - 1;
-				targets.add(validTargets.get(randomIndex));
-			}
-			break;
-		}
-		return targets;
-	}*/
-
 	private void addActionInfoToLogs(BattleResultDto result, int currentTurn) {
 		if (result.getBattleLog() != null) {
 			result.getBattleLog().forEach(log -> {
@@ -652,12 +555,6 @@ public class BattleServiceImpl implements BattleService {
 					+ unit.getInitiative() + ")");
 		}
 	}
-
-	//현재 context에 위임된 상태
-	/*private BattleUnit findAttackTarget(List<BattleUnit> allUnits, BattleUnit attacker) {
-		return allUnits.stream().filter(unit -> unit.getUnitType().equals("Player") && unit.isAlive()).findFirst()
-				.orElse(null);
-	}*/
 
 	// 임의의 세션 넘버 생성 함수
 	private int generateSessionID() {

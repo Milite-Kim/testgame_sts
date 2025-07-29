@@ -13,6 +13,11 @@ public class FlameArmorAbility implements SpecialAbility {
 	}
 
 	@Override
+	public void onHit(BattleUnit attacker, BattleUnit target,int damageDealt, BattleContext context) {
+
+	}
+
+	@Override
 	public void onDefensePerHit(BattleUnit defender, BattleUnit attacker, int damage, BattleContext context) {
 
 	}

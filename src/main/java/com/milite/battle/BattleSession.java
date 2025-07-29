@@ -45,8 +45,8 @@ public class BattleSession {
 		// 공격자의 공격력 받아오기
 
 		for (int hitCount = 0; hitCount < skill.getHit_time(); hitCount++) {
-			executeAttackByType(skill.getTarget(), validTargets, targetIndex, attacker, skill, attackerAtk, actor,
-					actorJosa, battleState, context);
+			executeAttackByTypeWithContext(skill.getTarget(), validTargets, targetIndex, attacker, skill, attackerAtk,
+					actor, actorJosa, battleState, context);
 		}
 
 		boolean isDefeated = checkBattleEnd(allUnits, attacker);
@@ -61,20 +61,22 @@ public class BattleSession {
 				currentBattleLog);
 	}
 
-	public BattleResultDto battleTurn(BattleUnit attacker, List<BattleUnit> allUnits) {
+	public BattleResultDto battleTurn(BattleUnit attacker, List<BattleUnit> allUnits, Integer targetIndex,
+			SkillDto skill) {
+		BattleContext context = new BattleContext(this, this.currentTurn);
+		return battleTurn(attacker, allUnits, targetIndex, skill, context);
+	}
+
+	public BattleResultDto battleTurn(BattleUnit attacker, List<BattleUnit> allUnits, BattleContext context) {
 		// 몬스터가 하는 공격 처리
 		BattleUnit player = getAlivePlayer(allUnits);
 		if (player == null) {
 			return new BattleResultDto("공격 대상 없음", 0, 0, false, true, new ArrayList<>());
 		}
-		return processMonsterAttack(attacker, player);
+		return processMonsterAttackWithContext(attacker, player, context);
 	}
 
-	private BattleContext createBattleContext() {
-		return new BattleContext(this, this.currentTurn);
-	}
-
-	private void executeAttackByType(String targetType, List<BattleUnit> validTargets, Integer targetIndex,
+	private void executeAttackByTypeWithContext(String targetType, List<BattleUnit> validTargets, Integer targetIndex,
 			BattleUnit attacker, SkillDto skill, int attackerAtk, String actor, String actorJosa,
 			BattleState battleState, BattleContext context) {
 		switch (targetType) {
@@ -82,13 +84,15 @@ public class BattleSession {
 			if (targetIndex < validTargets.size()) {
 				BattleUnit target = validTargets.get(targetIndex);
 				if (target.isAlive()) {
-					executeAttackOnTarget(attacker, target, skill, attackerAtk, actor, actorJosa, battleState, context);
+					executeAttackOnTargetWithContext(attacker, target, skill, attackerAtk, actor, actorJosa,
+							battleState, context);
 				}
 			}
 			break;
 		case "All":
-			validTargets.stream().filter(BattleUnit::isAlive).forEach(target -> executeAttackOnTarget(attacker, target,
-					skill, attackerAtk, actor, actorJosa, battleState, context));
+			validTargets.stream().filter(BattleUnit::isAlive)
+					.forEach(target -> executeAttackOnTargetWithContext(attacker, target, skill, attackerAtk, actor,
+							actorJosa, battleState, context));
 			break;
 		case "Random":
 			List<BattleUnit> aliveTargets = validTargets.stream().filter(BattleUnit::isAlive)
@@ -97,14 +101,15 @@ public class BattleSession {
 			if (!aliveTargets.isEmpty()) {
 				int randomIndex = CommonUtil.Dice(aliveTargets.size());
 				BattleUnit target = aliveTargets.get(randomIndex);
-				executeAttackOnTarget(attacker, target, skill, attackerAtk, actor, actorJosa, battleState, context);
+				executeAttackOnTargetWithContext(attacker, target, skill, attackerAtk, actor, actorJosa, battleState,
+						context);
 			}
 			break;
 		}
 	}
 
-	private void executeAttackOnTarget(BattleUnit attacker, BattleUnit target, SkillDto skill, int attackerAtk,
-			String actor, String actorJosa, BattleState battleState, BattleContext context) {
+	private void executeAttackOnTargetWithContext(BattleUnit attacker, BattleUnit target, SkillDto skill,
+			int attackerAtk, String actor, String actorJosa, BattleState battleState, BattleContext context) {
 		int targetLuck = getTargetLuck(target);
 		boolean isHit = isAttacked(targetLuck);
 
@@ -119,16 +124,14 @@ public class BattleSession {
 
 			boolean wasAliveBeforeHit = target.isAlive();
 
-			applyDamage(target, finalDamage);
+			context.damageUnit(target, finalDamage);
 			battleState.addDamage(finalDamage);
 			battleState.setAnyHit(true);
 
 			if (wasAliveBeforeHit && target instanceof BattleMonsterUnit) {
 				BattleMonsterUnit monster = (BattleMonsterUnit) target;
-
 				monster.executeOnDefensePerHit(attacker, finalDamage, context);
-
-				context.executeDelayedActions();
+				// context.executeDelayedActions();
 			}
 
 			if (!target.isAlive()) {
@@ -141,35 +144,31 @@ public class BattleSession {
 		}
 	}
 
-	private BattleResultDto processMonsterAttack(BattleUnit attacker, BattleUnit target) {
+	private BattleResultDto processMonsterAttackWithContext(BattleUnit attacker, BattleUnit target,
+			BattleContext context) {
 		BattleMonsterUnit monster = (BattleMonsterUnit) attacker;
 		String actor = attacker.getName();
 		String actorJosa = KoreanUtil.getJosa(actor, "이 ", "가 ");
 		BattleState battleState = new BattleState();
-
-		BattleContext context = createBattleContext();
 
 		int attackTimes = getMonsterAttackTimes(monster);
 
 		for (int i = 0; i < attackTimes && target.isAlive(); i++) {
 			int targetLuck = getTargetLuck(target);
 			boolean isHit = isAttacked(targetLuck);
-
+			
+			monster.executeOnAttack(target, context);
+			
 			if (isHit) {
 				int damage = calcMonsterAttack(monster);
 				String damageMessage = actor + actorJosa + target.getName() + "에게 " + damage + "의 피해를 입혔습니다.";
 				battleState.addDetail(damageMessage);
 
-				// boolean wasAliveBeforeHit = target.isAlive(); 아직 필요 없음(플레이어에게 피격 시 특수 효과 넣을
-				// 때)
-
-				applyDamage(target, damage);
+				monster.executeOnHit(target, damage, context);
+				
+				context.damageUnit(target, damage);
 				battleState.addDamage(damage);
 				battleState.setAnyHit(true);
-
-				/*
-				 * if(wasAliveBeforeHit && target instanceof PlayerDto) { 아직 구현 예정 없음 }
-				 */
 
 				if (!target.isAlive()) {
 					String defeatMessage = target.getName() + KoreanUtil.getJosa(target.getName(), "이 ", "가 ")
@@ -182,6 +181,11 @@ public class BattleSession {
 				battleState.addDetail(missMessage);
 			}
 		}
+
+		/*
+		 * if (battlestats.isAnyHit() && battleState.getTotalDamage()> 0){ if(target
+		 * instanceof PlayerDto){ 플레이어의 피격 시 효과 넣을 곳 } }
+		 */
 		boolean isPlayerDefeated = !target.isAlive();
 		String fullDetails = String.join("\n", battleState.getDetails());
 
@@ -269,20 +273,6 @@ public class BattleSession {
 			return ((BattleMonsterUnit) target).getLuck();
 		}
 		return 0;
-	}
-
-	private void applyDamage(BattleUnit target, int damage) {
-		// 데미지를 가하고 그 내용을 맞은 대상 체력에 반영하기
-		if (target.getUnitType().equals("Player")) {
-			PlayerDto player = (PlayerDto) target;
-			player.setCurr_hp(Math.max(player.getCurr_hp() - damage, 0));
-		} else if (target.getUnitType().equals("Monster")) {
-			BattleMonsterUnit monster = (BattleMonsterUnit) target;
-			monster.setHp(Math.max(monster.getHp() - damage, 0));
-			if (monster.getHp() == 0) {
-				monster.setAlive(false);
-			}
-		}
 	}
 
 	private boolean checkBattleEnd(List<BattleUnit> allUnits, BattleUnit attacker) {

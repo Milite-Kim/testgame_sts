@@ -8,7 +8,10 @@ public class ThreeChanceAbility implements SpecialAbility{
 	public void onAttack(BattleUnit attacker, BattleUnit target, BattleContext context) {
 
 	}
-	
+	@Override
+	public void onHit(BattleUnit attacker, BattleUnit target, int damageDealt,BattleContext context) {
+		
+	}
 	@Override
 	public void onDefensePerHit(BattleUnit defender, BattleUnit attacker, int damage, BattleContext context) {
 		

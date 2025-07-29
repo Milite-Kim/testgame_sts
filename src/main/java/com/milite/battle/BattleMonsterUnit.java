@@ -41,6 +41,12 @@ public class BattleMonsterUnit implements BattleUnit {
 			specialAbility.onAttack(this, target, context);
 		}
 	}
+	
+	public void executeOnHit(BattleUnit target, int damageDealt, BattleContext context) {
+		if(specialAbility != null) {
+			specialAbility.onHit(this, target, damageDealt, context);
+		}
+	}
 
 	public void executeOnDefensePerHit(BattleUnit attacker, int damage, BattleContext context) {
 		if (specialAbility != null) {
