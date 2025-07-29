@@ -46,14 +46,16 @@ public class BattleSession {
 
 		for (int hitCount = 0; hitCount < skill.getHit_time(); hitCount++) {
 			executeAttackByType(skill.getTarget(), validTargets, targetIndex, attacker, skill, attackerAtk, actor,
-					actorJosa, battleState);
+					actorJosa, battleState, context);
 		}
 
 		boolean isDefeated = checkBattleEnd(allUnits, attacker);
 		String fullDetails = String.join("\n", battleState.getDetails());
 
 		List<BattleLogEntry> currentBattleLog = new ArrayList<>();
-		currentBattleLog.add(new BattleLogEntry(actor, "attack", fullDetails,0));
+		currentBattleLog.add(new BattleLogEntry(actor, "attack", fullDetails, 0));
+
+		currentBattleLog.addAll(context.getLogs());
 
 		return new BattleResultDto("플레이어 공격 완료", battleState.getTotalDamage(), 0, battleState.isAnyHit(), isDefeated,
 				currentBattleLog);
@@ -66,6 +68,10 @@ public class BattleSession {
 			return new BattleResultDto("공격 대상 없음", 0, 0, false, true, new ArrayList<>());
 		}
 		return processMonsterAttack(attacker, player);
+	}
+
+	private BattleContext createBattleContext() {
+		return new BattleContext(this, this.currentTurn);
 	}
 
 	private void executeAttackByType(String targetType, List<BattleUnit> validTargets, Integer targetIndex,
@@ -111,9 +117,20 @@ public class BattleSession {
 					elementMultiplier);
 			battleState.addDetail(damageMessage);
 
+			boolean wasAliveBeforeHit = target.isAlive();
+
 			applyDamage(target, finalDamage);
 			battleState.addDamage(finalDamage);
 			battleState.setAnyHit(true);
+
+			if (wasAliveBeforeHit && target instanceof BattleMonsterUnit) {
+				BattleMonsterUnit monster = (BattleMonsterUnit) target;
+
+				monster.executeOnDefensePerHit(attacker, finalDamage, context);
+
+				context.executeDelayedActions();
+			}
+
 			if (!target.isAlive()) {
 				String defeatMessage = target.getName() + KoreanUtil.getJosa(target.getName(), "이 ", "가 ") + "쓰러졌습니다.";
 				battleState.addDetail(defeatMessage);
@@ -130,6 +147,8 @@ public class BattleSession {
 		String actorJosa = KoreanUtil.getJosa(actor, "이 ", "가 ");
 		BattleState battleState = new BattleState();
 
+		BattleContext context = createBattleContext();
+
 		int attackTimes = getMonsterAttackTimes(monster);
 
 		for (int i = 0; i < attackTimes && target.isAlive(); i++) {
@@ -141,9 +160,16 @@ public class BattleSession {
 				String damageMessage = actor + actorJosa + target.getName() + "에게 " + damage + "의 피해를 입혔습니다.";
 				battleState.addDetail(damageMessage);
 
+				// boolean wasAliveBeforeHit = target.isAlive(); 아직 필요 없음(플레이어에게 피격 시 특수 효과 넣을
+				// 때)
+
 				applyDamage(target, damage);
 				battleState.addDamage(damage);
 				battleState.setAnyHit(true);
+
+				/*
+				 * if(wasAliveBeforeHit && target instanceof PlayerDto) { 아직 구현 예정 없음 }
+				 */
 
 				if (!target.isAlive()) {
 					String defeatMessage = target.getName() + KoreanUtil.getJosa(target.getName(), "이 ", "가 ")
@@ -161,6 +187,8 @@ public class BattleSession {
 
 		List<BattleLogEntry> currentBattleLog = new ArrayList<>();
 		currentBattleLog.add(new BattleLogEntry(actor, "attack", fullDetails, 0));
+
+		currentBattleLog.addAll(context.getLogs());
 
 		return new BattleResultDto("몬스터 공격 완료", battleState.getTotalDamage(), target.getHp(), battleState.isAnyHit(),
 				isPlayerDefeated, currentBattleLog);

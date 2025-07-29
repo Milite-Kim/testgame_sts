@@ -13,7 +13,7 @@ public class BraveBiteAbility implements SpecialAbility{
 	}
 	
 	@Override
-	public void onDefense(BattleUnit defender, BattleUnit attacker, int damage, BattleContext context) {
+	public void onDefensePerHit(BattleUnit defender, BattleUnit attacker, int damage, BattleContext context) {
 		 System.out.println("BraveBite 발동 " + defender.getName() + " → " + attacker.getName());
 		if(attacker != null && attacker.isAlive()) {
 			context.addReflectDamage(attacker, REFLECT_DAMAGE);
@@ -25,6 +25,11 @@ public class BraveBiteAbility implements SpecialAbility{
 		}else {
 	        System.out.println("BraveBite 발동 실패 : 공격자가 없거나 사망");
 	    }
+	}
+	
+	@Override
+	public void onDefensePerTurn(BattleUnit defender, BattleUnit attacker, int totalDamage, BattleContext context) {
+	
 	}
 	
 	@Override

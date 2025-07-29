@@ -10,8 +10,12 @@ public class EmunAbility implements SpecialAbility{
 	}
 	
 	@Override
-	public void onDefense(BattleUnit defender, BattleUnit attacker, int damage, BattleContext context) {
+	public void onDefensePerHit(BattleUnit defender, BattleUnit attacker, int damage, BattleContext context) {
 		
+	}
+	@Override
+	public void onDefensePerTurn(BattleUnit defender, BattleUnit attacker, int totalDamage, BattleContext context) {
+	
 	}
 	
 	@Override

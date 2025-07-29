@@ -158,6 +158,8 @@ public class BattleServiceImpl implements BattleService {
 		List<BattleLogEntry> actionLogs = new ArrayList<>();
 		BattleContext context = new BattleContext(session, session.getCurrentTurn());
 
+		// 추후 플레이어의 턴 시작 특수 효과가 들어간다면 여기
+
 		processStatusEffectsAtActionStart(player, actionLogs, session.getCurrentTurn(), context); // 행동 전의 상태 이상 처리
 
 		if (isUnitDisabled(player)) {
@@ -183,9 +185,11 @@ public class BattleServiceImpl implements BattleService {
 		}
 
 		List<BattleUnit> allUnits = context.getAllUnits();
-		BattleResultDto attackResult = session.battleTurn(player, allUnits, targetIndex, skill);
+		BattleResultDto attackResult = session.battleTurn(player, allUnits, targetIndex, skill, context);
 
-		if (attackResult.isHit()) {
+		
+		
+		/*if (attackResult.isHit()) {
 			List<BattleUnit> hitTargets = findHitTargets(allUnits, skill, targetIndex);
 			for (BattleUnit target : hitTargets) {
 				if (target instanceof BattleMonsterUnit && target.isAlive()) {
@@ -193,10 +197,12 @@ public class BattleServiceImpl implements BattleService {
 					((BattleMonsterUnit) target).executeOnDefense(player, estimatedDamage, context);
 				}
 			}
-		}
+		}*/
 
-		applySkillStatusEffects(skill, allUnits, targetIndex, actionLogs, session.getCurrentTurn());
+		//applySkillStatusEffects(skill, allUnits, targetIndex, actionLogs, session.getCurrentTurn());
 
+		applySkillStatusEffects(skill,allUnits,targetIndex,context);
+		
 		context.executeDelayedActions();
 
 		addActionInfoToLogs(attackResult, session.getCurrentTurn());
@@ -213,7 +219,6 @@ public class BattleServiceImpl implements BattleService {
 	private BattleResultDto processMonsterActionInternal(BattleSession session, BattleUnit monster,
 			List<BattleLogEntry> allLogs) {
 		List<BattleLogEntry> actionLogs = new ArrayList<>();
-
 		BattleContext context = new BattleContext(session, session.getCurrentTurn());
 
 		if (!monster.isAlive()) {
@@ -239,6 +244,13 @@ public class BattleServiceImpl implements BattleService {
 					monster.getName() + KoreanUtil.getJosa(monster.getName(), "이 ", "가 ") + statusName + " 상태로 행동 불가",
 					session.getCurrentTurn()));
 
+			if(monster instanceof BattleMonsterUnit) {
+				((BattleMonsterUnit) monster).executeOnTurnEnd(context);
+			}
+			
+			context.executeDelayedActions();
+			actionLogs.addAll(context.getLogs());
+			
 			moveToNextAction(session);
 			allLogs.addAll(actionLogs);
 			return new BattleResultDto(statusName + " 상태로 행동 불가", 0, 0, false, false, actionLogs);
@@ -247,10 +259,10 @@ public class BattleServiceImpl implements BattleService {
 		List<BattleUnit> allUnits = context.getAllUnits();
 		BattleResultDto attackResult = session.battleTurn(monster, allUnits);
 
-		if (monster instanceof BattleMonsterUnit && attackResult.isHit()) {
+		/*if (monster instanceof BattleMonsterUnit && attackResult.isHit()) {
 			BattleUnit target = findAttackTarget(allUnits, monster);
 			((BattleMonsterUnit) monster).executeOnAttack(target, context);
-		}
+		}*/
 
 		if (monster instanceof BattleMonsterUnit) {
 			((BattleMonsterUnit) monster).executeOnTurnEnd(context);
@@ -354,22 +366,12 @@ public class BattleServiceImpl implements BattleService {
 
 		if (statusMap.containsKey(STATUS_BURN) && statusMap.get(STATUS_BURN) > 0) {
 			context.damageUnit(unit, BURN_DAMAGE);
-			/*
-			 * logs.add(new BattleLogEntry(unit.getName(), "burn_damage", unit.getName() +
-			 * KoreanUtil.getJosa(unit.getName(), "이 ", "가 ") + BURN_DAMAGE +
-			 * "의 피해를 받았습니다.", currentTurn));
-			 */ // context 측에서 자동으로 로그 저장
 			decreaseStatusTurns(unit, STATUS_BURN);
 		}
 
 		if (statusMap.containsKey(STATUS_POISON) && statusMap.get(STATUS_POISON) > 0) {
 			int poisonDamage = statusMap.get(STATUS_POISON);
 			context.damageUnit(unit, poisonDamage);
-			/*
-			 * logs.add(new BattleLogEntry(unit.getName(), "poison_damage", unit.getName() +
-			 * KoreanUtil.getJosa(unit.getName(), "이 ", "가 ") + poisonDamage +
-			 * "의 피해를 받았습니다.", currentTurn));
-			 */ // context 측에서 자동으로 로그 저장
 			decreaseStatusTurns(unit, STATUS_POISON);
 		}
 
@@ -377,7 +379,7 @@ public class BattleServiceImpl implements BattleService {
 	}
 
 	private void applySkillStatusEffects(SkillDto skill, List<BattleUnit> allUnits, Integer targetIndex,
-			List<BattleLogEntry> logs, int currentTurn) {
+			BattleContext context) {
 		String element = skill.getElement();
 		if (element == null) {
 			return;
@@ -397,7 +399,7 @@ public class BattleServiceImpl implements BattleService {
 			return;
 		}
 
-		// 속성으로 상태이상 결정
+		// 속성으로 상태이상 결정 todo(이 분은 스킬에 자체 상태이상 태그를 붙일 예정)
 		String statusType = null;
 
 		switch (element) {
@@ -417,13 +419,12 @@ public class BattleServiceImpl implements BattleService {
 
 		if (statusType != null) {
 			log.info(statusType + " (확률: " + effectRate + "%, 지속: " + effectTurns + "턴)");
-			applyStatusEffectToTargets(skill.getTarget(), allUnits, targetIndex, statusType, effectTurns, logs,
-					currentTurn);
+			applyStatusEffectToTargets(skill.getTarget(), allUnits, targetIndex, statusType, effectTurns, context);
 		}
 	}
 
 	private void applyStatusEffectToTargets(String targetType, List<BattleUnit> allUnits, Integer targetIndex,
-			String statusType, int statusTurns, List<BattleLogEntry> logs, int currentTurn) {
+			String statusType, int statusTurns, BattleContext context) {
 		List<BattleUnit> targets = new ArrayList<>();
 
 		switch (targetType) {
@@ -462,11 +463,12 @@ public class BattleServiceImpl implements BattleService {
 		}
 
 		for (BattleUnit target : targets) {
-			applyStatusEffect(target, statusType, statusTurns, logs, currentTurn);
+			context.addStatusEffect(target, statusType, statusTurns);
 		}
 	}
 
-	private void applyStatusEffect(BattleUnit target, String statusType, int newTurns, List<BattleLogEntry> logs,
+	//현재 context 측에 일임이 되어있는 상태
+	/*private void applyStatusEffect(BattleUnit target, String statusType, int newTurns, List<BattleLogEntry> logs,
 			int currentTurn) {
 		Map<String, Integer> statusMap = target.getStatusEffects();
 		if (statusMap == null) {
@@ -517,7 +519,7 @@ public class BattleServiceImpl implements BattleService {
 		} else {
 			log.debug(logMessage);
 		}
-	}
+	}*/
 
 	private boolean isUnitDisabled(BattleUnit unit) { // 유닛이 행동 불가인가?
 		Map<String, Integer> statusMap = unit.getStatusEffects();
@@ -609,14 +611,15 @@ public class BattleServiceImpl implements BattleService {
 		session.setCurrentActionIndex(nextIndex);
 	}
 
-	private List<BattleUnit> findHitTargets(List<BattleUnit> allUnits, SkillDto skill, Integer targetIndex) {
+	// 현재 context에 위임된 상태
+	/*private List<BattleUnit> findHitTargets(List<BattleUnit> allUnits, SkillDto skill, Integer targetIndex) {
 		List<BattleUnit> targets = new ArrayList<>();
 		List<BattleUnit> validTargets = allUnits.stream()
 				.filter(unit -> !unit.getUnitType().equals("Player") && unit.isAlive()).collect(Collectors.toList());
-		
+
 		switch (skill.getTarget()) {
 		case "Pick":
-			if(targetIndex != null && targetIndex < validTargets.size()) {
+			if (targetIndex != null && targetIndex < validTargets.size()) {
 				targets.add(validTargets.get(targetIndex));
 			}
 			break;
@@ -624,14 +627,14 @@ public class BattleServiceImpl implements BattleService {
 			targets.addAll(validTargets);
 			break;
 		case "Random":
-			if(!validTargets.isEmpty()) {
+			if (!validTargets.isEmpty()) {
 				int randomIndex = CommonUtil.Dice(validTargets.size()) - 1;
 				targets.add(validTargets.get(randomIndex));
 			}
 			break;
 		}
 		return targets;
-	}
+	}*/
 
 	private void addActionInfoToLogs(BattleResultDto result, int currentTurn) {
 		if (result.getBattleLog() != null) {
@@ -650,10 +653,11 @@ public class BattleServiceImpl implements BattleService {
 		}
 	}
 
-	private BattleUnit findAttackTarget(List<BattleUnit> allUnits, BattleUnit attacker) {
+	//현재 context에 위임된 상태
+	/*private BattleUnit findAttackTarget(List<BattleUnit> allUnits, BattleUnit attacker) {
 		return allUnits.stream().filter(unit -> unit.getUnitType().equals("Player") && unit.isAlive()).findFirst()
 				.orElse(null);
-	}
+	}*/
 
 	// 임의의 세션 넘버 생성 함수
 	private int generateSessionID() {
