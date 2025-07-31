@@ -3,7 +3,7 @@ package com.milite.battle.abilities;
 import com.milite.battle.BattleContext;
 import com.milite.battle.BattleUnit;
 
-public class EmunAbility implements SpecialAbility {
+public class BlindAbility implements SpecialAbility {
 	@Override
 	public void onAttack(BattleUnit attacker, BattleUnit target, BattleContext context) {
 
@@ -36,6 +36,6 @@ public class EmunAbility implements SpecialAbility {
 
 	@Override
 	public String getName() {
-		return "Emun";
+		return "FormChange";
 	}
 }

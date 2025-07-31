@@ -16,7 +16,7 @@ public class SkillDto {
 	int hit_time;
 	String target;
 	
-	//String statusEffectName;
+	String statusEffectName;
 	Integer statusEffectRate;
 	Integer statusEffectTurn;
 	

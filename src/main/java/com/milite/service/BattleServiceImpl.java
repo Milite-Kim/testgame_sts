@@ -7,6 +7,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.milite.battle.*;
+import com.milite.battle.abilities.ImmunAbility;
+import com.milite.battle.abilities.SummonAbility;
 import com.milite.dto.BattleResultDto;
 import com.milite.dto.MonsterDto;
 import com.milite.dto.PlayerDto;
@@ -187,8 +189,8 @@ public class BattleServiceImpl implements BattleService {
 		List<BattleUnit> allUnits = context.getAllUnits();
 		BattleResultDto attackResult = session.battleTurn(player, allUnits, targetIndex, skill, context);
 
-		applySkillStatusEffects(skill,allUnits,targetIndex,context);
-		
+		applySkillStatusEffects(skill, allUnits, targetIndex, context);
+
 		context.executeDelayedActions();
 
 		addActionInfoToLogs(attackResult, session.getCurrentTurn());
@@ -231,16 +233,23 @@ public class BattleServiceImpl implements BattleService {
 					session.getCurrentTurn()));
 
 			// 턴 종료 시의 특수 행동관련인데, 이 부분은 제거할까도 고민 중
-			if(monster instanceof BattleMonsterUnit) {
+			if (monster instanceof BattleMonsterUnit) {
 				((BattleMonsterUnit) monster).executeOnTurnEnd(context);
 			}
-			
+
 			context.executeDelayedActions();
 			actionLogs.addAll(context.getLogs());
-			
+
 			moveToNextAction(session);
 			allLogs.addAll(actionLogs);
 			return new BattleResultDto(statusName + " 상태로 행동 불가", 0, 0, false, false, actionLogs);
+		}
+
+		if (monster instanceof BattleMonsterUnit) {
+			BattleMonsterUnit battleMonster = (BattleMonsterUnit) monster;
+			if (battleMonster.getID() != null && battleMonster.getID() == 51) {
+				return processSummonMaster(session, battleMonster, actionLogs, allLogs, context);
+			}
 		}
 
 		List<BattleUnit> allUnits = context.getAllUnits();
@@ -289,8 +298,55 @@ public class BattleServiceImpl implements BattleService {
 		return results;
 	}
 
+	private BattleResultDto processSummonMaster(BattleSession session, BattleMonsterUnit summonMaster,
+			List<BattleLogEntry> actionLogs, List<BattleLogEntry> allLogs, BattleContext context) {
+		SummonAbility summonAbility = (SummonAbility) summonMaster.getSpecialAbility();
+		List<BattleUnit> allUnits = context.getAllUnits();
+
+		if (summonAbility.shouldSummon(allUnits)) {
+			// summonAbility.performSummon(summonMaster, context);
+
+			summonServant(session, context);
+
+			context.executeDelayedActions();
+			actionLogs.addAll(context.getLogs());
+			allLogs.addAll(actionLogs);
+
+			moveToNextAction(session);
+
+			return new BattleResultDto("혼령의 인도인이 뒤따라오는 혼들을 바라봅니다.", 0, 0, false, false, actionLogs);
+		} else {
+			BattleResultDto attackResult = session.battleTurn(summonMaster, allUnits, context);
+
+			summonMaster.executeOnTurnEnd(context);
+			context.executeDelayedActions();
+
+			addActionInfoToLogs(attackResult, session.getCurrentTurn());
+			actionLogs.addAll(attackResult.getBattleLog());
+			allLogs.addAll(actionLogs);
+
+			moveToNextAction(session);
+
+			return new BattleResultDto(attackResult.getMessage(), attackResult.getDamage(), attackResult.getNewHp(),
+					attackResult.isHit(), attackResult.isDefeated(), actionLogs);
+		}
+	}
+
 	private BattleResultDto checkBattleEndCondition(BattleSession session) {
 		boolean playerAlive = session.getPlayer().isAlive();
+
+		boolean summonMasterAlive = session.getEnemy().stream().filter(monster -> monster instanceof BattleMonsterUnit)
+				.map(monster -> (BattleMonsterUnit) monster)
+				.anyMatch(monster -> monster.getID() != null && monster.getID() == 51 && monster.isAlive());
+
+		if (!summonMasterAlive && hasSummonMaster(session)) {
+			killAllServants(session);
+
+			session.setFinished(true);
+			log.info("=== 인도인이 쓰러져 혼령들이 흩어집니다 ===");
+			return new BattleResultDto("혼령의 인도인을 처치하여 승리", 0, 0, false, true, session.getBattleLog());
+		}
+
 		boolean anyMonsterAlive = session.getEnemy().stream().anyMatch(BattleUnit::isAlive);
 
 		if (!playerAlive) {
@@ -381,24 +437,13 @@ public class BattleServiceImpl implements BattleService {
 			return;
 		}
 
-		// 속성으로 상태이상 결정 todo(이 분은 스킬에 자체 상태이상 태그를 붙일 예정)
-		String statusType = null;
+		String statusType = skill.getStatusEffectName();
 
-		switch (element) {
-		case "Fire":
-			statusType = STATUS_BURN;
-			break;
-		case "Water":
-			statusType = STATUS_FREEZE;
-			break;
-		case "Grass":
-			statusType = STATUS_POISON;
-			break;
-		case "None":
-			statusType = STATUS_STUN;
-			break;
-		}
-
+		/*
+		 * switch (element) { case "Fire": statusType = STATUS_BURN; break; case
+		 * "Water": statusType = STATUS_FREEZE; break; case "Grass": statusType =
+		 * STATUS_POISON; break; case "None": statusType = STATUS_STUN; break; }
+		 */
 		if (statusType != null) {
 			log.info(statusType + " (확률: " + effectRate + "%, 지속: " + effectTurns + "턴)");
 			applyStatusEffectToTargets(skill.getTarget(), allUnits, targetIndex, statusType, effectTurns, context);
@@ -445,6 +490,11 @@ public class BattleServiceImpl implements BattleService {
 		}
 
 		for (BattleUnit target : targets) {
+			if (ImmunAbility.isImmun(target)) {
+				context.addLogEntry(target.getName(), "immun",
+						target.getName() + KoreanUtil.getJosa(target.getName(), "은 ", "는 ") + "면역력으로 상태이상에 걸리지 않았습니다.");
+				continue; // 상태이상 적용 스킵
+			}
 			context.addStatusEffect(target, statusType, statusTurns);
 		}
 	}
@@ -593,6 +643,43 @@ public class BattleServiceImpl implements BattleService {
 			Enemy.add(dto.get(0));
 		}
 		return Enemy;
+	}
+
+	public void summonServant(BattleSession session, BattleContext context) {
+		MonsterDto servantDto = monsterMapper.SummonServant();
+		BattleMonsterUnit servant = new BattleMonsterUnit(servantDto);
+
+		session.getEnemy().add(servant);
+
+		List<BattleUnit> newActionOrder = createActionOrder(session.getPlayer(), session.getEnemy());
+		session.setActionOrder(newActionOrder);
+
+		refreshMonsterMemory(session.getPlayer().getPlayerID(), session.getEnemy());
+
+		context.addLogEntry("System", "summon", "사로잡힌 혼이 소환되었습니다");
+	}
+
+	private void refreshMonsterMemory(String PlayerID, ArrayList<BattleMonsterUnit> enemy) {
+		MonsterMemory.entrySet().removeIf(entry -> entry.getKey().startsWith(PlayerID + "_enemy"));
+
+		for (int i = 0; i < enemy.size(); i++) {
+			MonsterMemory.put(PlayerID + "_enemy" + i, enemy.get(i));
+		}
+	}
+
+	private boolean hasSummonMaster(BattleSession session) {
+		return session.getEnemy().stream().filter(monster -> monster instanceof BattleMonsterUnit)
+				.map(monster -> (BattleMonsterUnit) monster)
+				.anyMatch(monster -> monster.getID() != null && monster.getID() == 51);
+	}
+
+	private void killAllServants(BattleSession session) {
+		session.getEnemy().stream().filter(monster -> monster instanceof BattleMonsterUnit)
+				.map(monster -> (BattleMonsterUnit) monster)
+				.filter(monster -> monster.getID() != null && monster.getID() == 52).forEach(servant -> {
+					servant.setHp(0);
+					servant.setAlive(false);
+				});
 	}
 
 	// 플레이어 정보 조회 메서드

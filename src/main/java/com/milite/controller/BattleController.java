@@ -13,7 +13,7 @@ import lombok.*;
 import java.util.*;
 
 @CrossOrigin(origins = "http://localhost:3000")
-@RequestMapping("/battle")// 경로는 필요에 의해 수정 해야함
+@RequestMapping("/battle") // 경로는 필요에 의해 수정 해야함
 @RestController
 public class BattleController {
 
@@ -101,6 +101,7 @@ public class BattleController {
 				System.out.println("플레이어 승리!");
 			} else if (!playerAlive) {
 				battleResult = "Defeat";
+
 				rewards = Map.of("message", "패배하였습니다.");
 				System.out.println("플레이어 패배");
 			} else {
@@ -117,6 +118,14 @@ public class BattleController {
 			e.printStackTrace();
 			return ResponseEntity.badRequest().body(Map.of("error", "전투 종료 중 오류 발생 : " + e.getMessage()));
 		}
+	}
+
+	@GetMapping("/test")
+	@ResponseBody
+	public ResponseEntity<String> test() {
+	    System.out.println("=== TEST 메서드 호출됨 ===");
+	    System.out.println("현재 시간: " + new java.util.Date());
+	    return ResponseEntity.ok("테스트 성공! 컨트롤러가 정상 작동합니다.");
 	}
 
 	@GetMapping("/status")

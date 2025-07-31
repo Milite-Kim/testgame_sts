@@ -14,7 +14,7 @@ public interface SpecialAbility {
 	
 	void onDefensePerHit(BattleUnit defender, BattleUnit attacker, int damage, BattleContext context);
 	/* 피격 시, 매 피격마다 발동하는 옵션
-	 * 현재는 BraveBite와 Emun에 쓸 것 같음 */
+	 * 현재는 BraveBite와 Immun에 쓸 것 같음 */
 	
 	void onDefensePerTurn(BattleUnit defender, BattleUnit attacker, int totalDamage, BattleContext context);
 	/* 피격 시, 해당 턴에 한 번만 발동하는 옵션
@@ -25,7 +25,7 @@ public interface SpecialAbility {
 	 * Recovery 라던가*/
 	void onTurnEnd(BattleUnit unit, BattleContext context);
 	/* 턴 종료 시 발동하는 옵션
-	 * Emun을 이쪽으로 옮겨도 될 것 같음*/
+	 * Immun을 이쪽으로 옮겨도 될 것 같음*/
 	
 	String getName();
 }

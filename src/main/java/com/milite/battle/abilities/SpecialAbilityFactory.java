@@ -4,7 +4,7 @@ import java.util.*;
 
 public class SpecialAbilityFactory {
 	private static final Map<String, SpecialAbility> abilities = new HashMap<>();
-	
+
 	static {
 		abilities.put("Swift", new SwiftAbility());
 		abilities.put("DoubleAttack", new DoubleAttackAbility());
@@ -15,11 +15,12 @@ public class SpecialAbilityFactory {
 		abilities.put("FlameArmor", new FlameArmorAbility());
 		abilities.put("PropertyChange", new PropertyChangeAbility());
 		abilities.put("ThreeStack", new ThreeStackAbility());
-		abilities.put("Emun", new EmunAbility());
+		abilities.put("Immun", new ImmunAbility());
 		abilities.put("BloodSuck", new BloodSuckAbility());
-		abilities.put("servat", new ServatAbility());
+		abilities.put("servat", new SummonAbility());
+		abilities.put("Blind", new BlindAbility());
 	}
-	
+
 	public static SpecialAbility getAbility(String specialName) {
 		return abilities.get(specialName);
 	}

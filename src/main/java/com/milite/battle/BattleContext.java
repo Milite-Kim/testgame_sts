@@ -42,7 +42,7 @@ public class BattleContext {
 		log.debug("몬스터 소환이 예약되었습니다 : " + monsterID + " x" + count);
 	}
 
-	public void healUnit(BattleUnit unit, int amount) {
+	public int healUnit(BattleUnit unit, int amount) {
 		if (unit.getUnitType().equals("Player")) {
 			PlayerDto player = (PlayerDto) unit;
 			int currentHp = player.getCurr_hp();
@@ -57,18 +57,25 @@ public class BattleContext {
 						unit.getName() + KoreanUtil.getJosa(unit.getName(), "이 ", "가 ") + actualHealed + "만큼 회복하였습니다");
 				log.info(unit.getName() + " 회복 : " + actualHealed + " ( HP : " + currentHp + " -> " + newHp + ")");
 			}
+
+			return actualHealed;
 		} else if (unit.getUnitType().equals("Monster")) {
 			BattleMonsterUnit monster = (BattleMonsterUnit) unit;
 			int currentHp = monster.getHp();
-			// int maxHp = monster.getHp() + amount;
-			int newHp = currentHp + amount;
+			int maxHp = monster.getMax_hp();
+			int newHp = Math.min(currentHp + amount, maxHp);
+			int actualHealed = newHp - currentHp;
 
 			monster.setHp(newHp);
 
-			addLogEntry(unit.getName() + KoreanUtil.getJosa(unit.getName(), "이 ", "가 ") + amount + "만큼 회복하였습니다");
-			log.info(unit.getName() + " 회복 : " + amount + " ( HP : " + currentHp + " -> " + newHp + ")");
-
+			if (actualHealed > 0) {
+				addLogEntry(
+						unit.getName() + KoreanUtil.getJosa(unit.getName(), "이 ", "가 ") + actualHealed + "만큼 회복하였습니다");
+				log.info(unit.getName() + " 회복 : " + actualHealed + " ( HP : " + currentHp + " -> " + newHp + ")");
+			}
+			return actualHealed;
 		}
+		return 0;
 	}
 
 	public void damageUnit(BattleUnit unit, int damage) {
@@ -296,18 +303,18 @@ class StatusEffectAction implements DelayedAction {
 	}
 }
 
-class SummonAction implements DelayedAction{
+class SummonAction implements DelayedAction {
 	private final String monsterID;
 	private final int count;
-	
+
 	public SummonAction(String monsterID, int count) {
 		this.monsterID = monsterID;
 		this.count = count;
 	}
-	
+
 	@Override
 	public void execute(BattleContext context) {
-		//todo 로직 구현해야함
+		// todo 로직 구현해야함
 		context.addLogEntry("System", "summon", "몬스터 소환 시도 : " + monsterID + " x" + count + " (아직 미구현)");
 	}
 }

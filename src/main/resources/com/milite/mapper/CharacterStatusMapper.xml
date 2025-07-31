@@ -4,7 +4,7 @@
 	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.milite.mapper.CharacterStatusMapper">
 	<!-- 캐릭터 DB에서 해당 이름과 일치하는 캐릭터의 정보 가져오기 -->
-	<select id="getCharInfo" resultType="com.milite.dto.CharaterDto">
+	<select id="getCharInfo" resultType="com.milite.dto.CharacterDto">
 		select * from CharacterDB
 		where
 		name = #{name}

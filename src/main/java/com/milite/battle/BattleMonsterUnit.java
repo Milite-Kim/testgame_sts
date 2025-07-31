@@ -14,6 +14,7 @@ public class BattleMonsterUnit implements BattleUnit {
 	private String name;
 	private String element;
 	private int hp;
+	private int max_hp;
 	private int min_atk;
 	private int max_atk;
 	private int luck;
@@ -28,6 +29,7 @@ public class BattleMonsterUnit implements BattleUnit {
 		this.name = dto.getName();
 		this.element = dto.getElement();
 		this.hp = calcHP(dto);
+		this.max_hp = hp;
 		this.min_atk = dto.getMin_atk();
 		this.max_atk = dto.getMax_atk();
 		this.luck = dto.getLuck();
@@ -92,6 +94,11 @@ public class BattleMonsterUnit implements BattleUnit {
 		return this.hp;
 	}
 
+	@Override
+	public int getMax_hp() {
+		return this.max_hp;
+	}
+	
 	@Override
 	public boolean isAlive() {
 		return this.isAlive;

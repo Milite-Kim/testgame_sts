@@ -37,4 +37,8 @@ public interface BattleUnit {
 
 	default void setStatusEffects(Map<String, Integer> statusEffects) {
 	}
+	
+	default int getMax_hp() {
+		return 0;
+	}
 }

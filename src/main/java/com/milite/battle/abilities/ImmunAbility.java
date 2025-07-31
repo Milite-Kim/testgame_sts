@@ -1,12 +1,11 @@
 package com.milite.battle.abilities;
 
 import com.milite.battle.BattleContext;
+import com.milite.battle.BattleMonsterUnit;
 import com.milite.battle.BattleUnit;
 import com.milite.util.KoreanUtil;
 
-public class BloodSuckAbility implements SpecialAbility {
-	private static final double HEAL_RATIO = 0.5;
-	
+public class ImmunAbility implements SpecialAbility {
 	@Override
 	public void onAttack(BattleUnit attacker, BattleUnit target, BattleContext context) {
 
@@ -14,18 +13,7 @@ public class BloodSuckAbility implements SpecialAbility {
 
 	@Override
 	public void onHit(BattleUnit attacker, BattleUnit target, int damageDealt, BattleContext context) {
-		if(damageDealt <= 0) {
-			return;
-		}
-		
-		int healAmount = (int) Math.ceil(damageDealt*HEAL_RATIO);
-		
-		if (healAmount > 0) {
-			int actualHealed = context.healUnit(attacker, healAmount);
-			context.addLogEntry(attacker.getName(), "blood_suck",
-					attacker.getName() + KoreanUtil.getJosa(attacker.getName(), "이 ", "가 ") +
-					"흡혈로 " + actualHealed + "만큼 체력을 회복했습니다.");
-		}
+
 	}
 
 	@Override
@@ -35,7 +23,11 @@ public class BloodSuckAbility implements SpecialAbility {
 
 	@Override
 	public void onDefensePerTurn(BattleUnit defender, BattleUnit attacker, int totalDamage, BattleContext context) {
-
+		if (defender.getStatusEffects() != null && !defender.getStatusEffects().isEmpty()) {
+			defender.getStatusEffects().clear();
+			context.addLogEntry(defender.getName(), "immune",
+					defender.getName() + KoreanUtil.getJosa(defender.getName(), "의 ", "의 ") + "면역력으로 상태이상이 정화되었습니다.");
+		}
 	}
 
 	@Override
@@ -50,6 +42,14 @@ public class BloodSuckAbility implements SpecialAbility {
 
 	@Override
 	public String getName() {
-		return "BloodSuck";
+		return "Immun";
+	}
+
+	public static boolean isImmun(BattleUnit unit) {
+		if (unit instanceof BattleMonsterUnit) {
+			BattleMonsterUnit monster = (BattleMonsterUnit) unit;
+			return "Immun".equals(monster.getSpecial());
+		}
+		return false;
 	}
 }

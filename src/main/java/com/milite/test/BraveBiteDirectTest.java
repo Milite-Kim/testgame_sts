@@ -63,7 +63,7 @@ public class BraveBiteDirectTest {
             
             // 6. BraveBite 직접 테스트 (플레이어가 몬스터를 공격했다고 가정)
             System.out.println("\n플레이어가 미공수를 공격했습니다!");
-            braveBiteMonster.executeOnDefense(testPlayer, 10, context);
+            braveBiteMonster.executeOnDefensePerHit(testPlayer, 10, context);
             
             System.out.println("지연된 액션을 실행합니다...");
             context.executeDelayedActions();
