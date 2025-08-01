@@ -5,6 +5,8 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import com.milite.battle.abilities.BlindAbility;
+import com.milite.battle.abilities.ThreeChanceAbility;
+import com.milite.battle.abilities.ThreeStackAbility;
 import com.milite.dto.BattleResultDto;
 import com.milite.dto.PlayerDto;
 import com.milite.dto.SkillDto;
@@ -162,7 +164,16 @@ public class BattleSession {
 
 			if (isHit) {
 				int damage = calcMonsterAttack(monster);
-				String damageMessage = actor + actorJosa + target.getName() + "에게 " + damage + "의 피해를 입혔습니다.";
+
+				String damageMessage;
+				if (isThreeMultipleTurn()
+						&& ("ThreeChance".equals(monster.getSpecial()) || "ThreeStack".equals(monster.getSpecial()))) {
+					damageMessage = actor + actorJosa + target.getName() + "에게 강화된 공격으로 " + damage + "의 피해를 입혔습니다!";
+				} else {
+
+					damageMessage = actor + actorJosa + target.getName() + "에게 " + damage + "의 피해를 입혔습니다.";
+				}
+				
 				battleState.addDetail(damageMessage);
 
 				monster.executeOnHit(target, damage, context);
@@ -246,8 +257,19 @@ public class BattleSession {
 		// 몬스터의 공격력 불러오기
 		int min_atk = monster.getMin_atk();
 		int max_atk = monster.getMax_atk();
+		int baseDamage = (int) (Math.random() * (max_atk - min_atk + 1)) + min_atk;
 
-		return (int) (Math.random() * (max_atk - min_atk + 1)) + min_atk;
+		double multiplier = 1.0;
+
+		if ("ThreeChance".equals(monster.getSpecial())) {
+			multiplier = ThreeChanceAbility.getDamageMultiplier(monster, this.currentTurn);
+		} else if ("ThreeStack".equals(monster.getSpecial())) {
+			multiplier = ThreeStackAbility.getDamageMultiplier(monster, this.currentTurn);
+		}
+
+		int finalDamage = (int) Math.round(baseDamage * multiplier);
+
+		return finalDamage;
 	}
 
 	private int getMonsterAttackTimes(BattleMonsterUnit monster) {
@@ -313,6 +335,10 @@ public class BattleSession {
 		calc = calc + (int) (dmg_range + Math.floor(atk / 5));
 
 		return calc;
+	}
+
+	private boolean isThreeMultipleTurn() {
+		return this.currentTurn > 0 && this.currentTurn % 3 == 0;
 	}
 
 	@Data
