@@ -4,6 +4,7 @@ import lombok.*;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import com.milite.battle.abilities.BlindAbility;
 import com.milite.dto.BattleResultDto;
 import com.milite.dto.PlayerDto;
 import com.milite.dto.SkillDto;
@@ -156,16 +157,16 @@ public class BattleSession {
 		for (int i = 0; i < attackTimes && target.isAlive(); i++) {
 			int targetLuck = getTargetLuck(target);
 			boolean isHit = isAttacked(targetLuck);
-			
+
 			monster.executeOnAttack(target, context);
-			
+
 			if (isHit) {
 				int damage = calcMonsterAttack(monster);
 				String damageMessage = actor + actorJosa + target.getName() + "에게 " + damage + "의 피해를 입혔습니다.";
 				battleState.addDetail(damageMessage);
 
 				monster.executeOnHit(target, damage, context);
-				
+
 				context.damageUnit(target, damage);
 				battleState.addDamage(damage);
 				battleState.setAnyHit(true);
@@ -287,8 +288,19 @@ public class BattleSession {
 
 	private boolean isAttacked(int luck) {
 		// 명중 여부 확인하기
+		return isAttacked(luck, null, null);
+	}
+
+	private boolean isAttacked(int luck, BattleUnit attacker, BattleUnit target) {
 		int n = CommonUtil.Dice(15);
 		int dodgeChance = n * 2 + luck;
+
+		if (attacker != null && attacker.getUnitType().equals("Player")) {
+			if (BlindAbility.isBlind(attacker)) {
+				dodgeChance += BlindAbility.getBlindDodgeBonus();
+			}
+		}
+
 		int roll = (int) (Math.random() * 100) + 1;
 		return roll > dodgeChance;
 	}

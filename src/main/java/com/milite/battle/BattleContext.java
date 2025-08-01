@@ -297,9 +297,18 @@ class StatusEffectAction implements DelayedAction {
 			target.setStatusEffects(statusEffects);
 		}
 
-		statusEffects.put(statusType, turns);
-		context.addLogEntry("System", "ststus_effect", target.getName()
-				+ KoreanUtil.getJosa(target.getName(), "이 ", "가 ") + statusType + " 상태에 걸렸습니다. (" + turns + "턴)");
+		int currentTurns = statusEffects.getOrDefault(statusType, 0);
+		int newTurns = Math.max(currentTurns, turns);
+
+		statusEffects.put(statusType, newTurns);
+
+		if (currentTurns > 0) {
+			context.addLogEntry("System", "status_refresh",
+					target.getName() + "의 " + statusType + " 상태 지속시간이 " + newTurns + "턴으로 갱신되었습니다.");
+		} else {
+			context.addLogEntry("System", "ststus_effect", target.getName()
+					+ KoreanUtil.getJosa(target.getName(), "이 ", "가 ") + statusType + " 상태에 걸렸습니다. (" + newTurns + "턴)");
+		}
 	}
 }
 

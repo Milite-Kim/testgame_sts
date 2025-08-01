@@ -42,6 +42,8 @@ public class BattleServiceImpl implements BattleService {
 
 	private static final int BURN_DAMAGE = 3; // 이 부분은 화상 데미지 결정되면 그 때 수정
 
+	private static final String STATUS_BLIND= "Blind";
+	
 	public BattleResultDto processNextAction(String PlayerID, SkillDto playerSkill, Integer targetIndex) {
 
 		BattleSession session = SessionMemory.get(PlayerID);
@@ -413,6 +415,15 @@ public class BattleServiceImpl implements BattleService {
 			decreaseStatusTurns(unit, STATUS_POISON);
 		}
 
+		if(statusMap.containsKey(STATUS_BLIND) && statusMap.get(STATUS_BLIND)>0) {
+			decreaseStatusTurns(unit,STATUS_BLIND);
+			if(statusMap.getOrDefault(STATUS_BLIND, 0)<=0) {
+				context.addLogEntry(unit.getName(), "status_clear", 
+						unit.getName() + KoreanUtil.getJosa(unit.getName(), "의 ", "의 ") + 
+						"실명이 해제되었습니다.");
+			}
+		}
+		
 		logs.addAll(context.getLogs());
 	}
 
@@ -439,11 +450,6 @@ public class BattleServiceImpl implements BattleService {
 
 		String statusType = skill.getStatusEffectName();
 
-		/*
-		 * switch (element) { case "Fire": statusType = STATUS_BURN; break; case
-		 * "Water": statusType = STATUS_FREEZE; break; case "Grass": statusType =
-		 * STATUS_POISON; break; case "None": statusType = STATUS_STUN; break; }
-		 */
 		if (statusType != null) {
 			log.info(statusType + " (확률: " + effectRate + "%, 지속: " + effectTurns + "턴)");
 			applyStatusEffectToTargets(skill.getTarget(), allUnits, targetIndex, statusType, effectTurns, context);
