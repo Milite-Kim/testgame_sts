@@ -23,6 +23,7 @@ public class BattleMonsterUnit implements BattleUnit {
 	private Map<String, Integer> statusEffects = new HashMap<>();
 
 	private SpecialAbility specialAbility;
+	private int formCount = 0;
 
 	public BattleMonsterUnit(MonsterDto dto) {
 		this.ID = dto.getMonsterID();
@@ -43,9 +44,9 @@ public class BattleMonsterUnit implements BattleUnit {
 			specialAbility.onAttack(this, target, context);
 		}
 	}
-	
+
 	public void executeOnHit(BattleUnit target, int damageDealt, BattleContext context) {
-		if(specialAbility != null) {
+		if (specialAbility != null) {
 			specialAbility.onHit(this, target, damageDealt, context);
 		}
 	}
@@ -79,6 +80,10 @@ public class BattleMonsterUnit implements BattleUnit {
 		return hp;
 	}
 
+	public void forceFormChange() {
+		this.formCount = (this.formCount + 1) % 2;
+	}
+
 	/*
 	 * private int calcATK(MonsterDto dto) { int atk = (int) (Math.random() *
 	 * (dto.getMax_atk() - dto.getMin_atk())) + dto.getMin_atk(); return atk; }
@@ -98,7 +103,7 @@ public class BattleMonsterUnit implements BattleUnit {
 	public int getMax_hp() {
 		return this.max_hp;
 	}
-	
+
 	@Override
 	public boolean isAlive() {
 		return this.isAlive;

@@ -13,11 +13,11 @@ public class SpecialAbilityFactory {
 		abilities.put("FormChange", new FormChangeAbility());
 		abilities.put("ThreeChance", new ThreeChanceAbility());
 		abilities.put("FlameArmor", new FlameArmorAbility());
-		abilities.put("PropertyChange", new PropertyChangeAbility());
+		abilities.put("ModeSwitch", new ModeSwitchAbility());
 		abilities.put("ThreeStack", new ThreeStackAbility());
 		abilities.put("Immun", new ImmunAbility());
 		abilities.put("BloodSuck", new BloodSuckAbility());
-		abilities.put("servat", new SummonAbility());
+		abilities.put("Summon", new SummonAbility());
 		abilities.put("Blind", new BlindAbility());
 	}
 

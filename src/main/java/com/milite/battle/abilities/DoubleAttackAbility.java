@@ -4,6 +4,7 @@ import com.milite.battle.BattleContext;
 import com.milite.battle.BattleUnit;
 
 public class DoubleAttackAbility implements SpecialAbility {
+	// 현재 공격횟수로 이미 구현되어있음
 	@Override
 	public void onAttack(BattleUnit attacker, BattleUnit target, BattleContext context) {
 

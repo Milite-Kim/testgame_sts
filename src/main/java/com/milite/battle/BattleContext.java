@@ -1,6 +1,9 @@
 package com.milite.battle;
 
 import java.util.*;
+
+import com.milite.battle.abilities.FormChangeAbility;
+import com.milite.battle.abilities.ModeSwitchAbility;
 import com.milite.dto.PlayerDto;
 import com.milite.util.KoreanUtil;
 
@@ -79,33 +82,56 @@ public class BattleContext {
 	}
 
 	public void damageUnit(BattleUnit unit, int damage) {
+		int finalDamage = damage;
+		if(unit.getUnitType().equals("Monster")) {
+			finalDamage = applyDefenseReduction(unit, damage);
+		}
+		
 		if (unit.getUnitType().equals("Player")) {
 			PlayerDto player = (PlayerDto) unit;
 			int currentHp = player.getCurr_hp();
-			int newHp = Math.max(currentHp - damage, 0);
+			int newHp = Math.max(currentHp - finalDamage, 0);
 			player.setCurr_hp(newHp);
 
-			addLogEntry(unit.getName() + KoreanUtil.getJosa(unit.getName(), "이 ", "가 ") + damage + "의 피해를 받았습니다");
-			log.info(unit.getName() + " 피해: " + damage + " (HP: " + currentHp + " → " + newHp + ")");
+			addLogEntry(unit.getName() + KoreanUtil.getJosa(unit.getName(), "이 ", "가 ") + finalDamage + "의 피해를 받았습니다");
+			log.info(unit.getName() + " 피해: " + finalDamage + " (HP: " + currentHp + " → " + newHp + ")");
 		} else if (unit.getUnitType().equals("Monster")) {
 			BattleMonsterUnit monster = (BattleMonsterUnit) unit;
 			int currentHp = monster.getHp();
-			int newHp = Math.max(currentHp - damage, 0);
+			int newHp = Math.max(currentHp - finalDamage, 0);
 			monster.setHp(newHp);
 
 			if (newHp <= 0) {
 				monster.setAlive(false);
 				addLogEntry(
-						unit.getName() + KoreanUtil.getJosa(unit.getName(), "이 ", "가 ") + damage + "의 피해를 입고 쓰러졌습니다.");
-				log.info(unit.getName() + " 사망 : " + damage + " 피해");
+						unit.getName() + KoreanUtil.getJosa(unit.getName(), "이 ", "가 ") + finalDamage + "의 피해를 입고 쓰러졌습니다.");
+				log.info(unit.getName() + " 사망 : " + finalDamage + " 피해");
 			} else {
-				addLogEntry(unit.getName() + KoreanUtil.getJosa(unit.getName(), "이 ", "가 ") + damage
+				addLogEntry(unit.getName() + KoreanUtil.getJosa(unit.getName(), "이 ", "가 ") + finalDamage
 						+ "의 피해를 받았습니다. (HP: " + currentHp + " → " + newHp + ")");
-				log.info(unit.getName() + " 피해: " + damage + " (HP: " + currentHp + " → " + newHp + ")");
+				log.info(unit.getName() + " 피해: " + finalDamage + " (HP: " + currentHp + " → " + newHp + ")");
 			}
 		}
 	}
 
+	private int applyDefenseReduction(BattleUnit unit, int damage) {
+		if(!(unit instanceof BattleMonsterUnit)) {
+			return damage;
+		}
+		
+		BattleMonsterUnit monster = (BattleMonsterUnit) unit;
+		double defenseMultiplier = 1.0;
+		
+		if("FormChange".equals(monster.getSpecial())) {
+			defenseMultiplier = FormChangeAbility.getDefenseMultiplier(monster, getCurrentTurn());
+		}else if("ModeSwitch".equals(monster.getSpecial())) {
+			defenseMultiplier = ModeSwitchAbility.getDefenseMulitplier(monster, getCurrentTurn());
+		}
+		
+		int finalDamage = (int) Math.round(damage / defenseMultiplier);
+		return Math.max(finalDamage, 1);
+	}
+	
 	public void addLogEntry(String message) {
 		BattleLogEntry logEntry = new BattleLogEntry("System", "special", message, currentTurn);
 		logs.add(logEntry);

@@ -5,11 +5,11 @@ import com.milite.battle.BattleMonsterUnit;
 import com.milite.battle.BattleUnit;
 import com.milite.util.KoreanUtil;
 
-public class FormChangeAbility implements SpecialAbility {
-	private static final double OFFENSE_ATK_MULTIPLIER = 1.3;
-	private static final double OFFENSE_DEF_MULTIPLIER = 1.3;
-	private static final double DEFENSE_ATK_MULTIPLIER = 1.3;
-	private static final double DEFENSE_DEF_MULTIPLIER = 1.3;
+public class ModeSwitchAbility implements SpecialAbility {
+	private static final double OFFENSE_ATK_MULTIPLIER = 1.2;
+	private static final double OFFENSE_DEF_MULTIPLIER = 0.8;
+	private static final double DEFENSE_ATK_MULTIPLIER = 1.2;
+	private static final double DEFENSE_DEF_MULTIPLIER = 0.8;
 
 	@Override
 	public void onAttack(BattleUnit attacker, BattleUnit target, BattleContext context) {
@@ -41,14 +41,13 @@ public class FormChangeAbility implements SpecialAbility {
 		int currentTurn = context.getCurrentTurn();
 		int formCount = getFormCount(monster);
 
-		boolean isOffensiveStance = shouldUseOffensiveStance(formCount, currentTurn);
+		boolean isHungryMode = shouldUseOffensiveStance(formCount, currentTurn);
 
-		String stanceName = isOffensiveStance ? "공격 태세" : "방어 태세";
-		String description = isOffensiveStance ? "공격력이 증가하지만 받는 피해도 증가합니다." : "받는 피해가 감소하지만 공격력도 감소합니다.";
-		
-		context.addLogEntry(unit.getName(), "form_change", 
-	            unit.getName() + KoreanUtil.getJosa(unit.getName(), "이 ", "가 ") + 
-	            stanceName + "로 변환했습니다. " + description);
+		String modeName = isHungryMode ? "포식 모드" : "휴식 모드";
+		String description = isHungryMode ? "공격적으로 변합니다" : "방어적으로 변합니다";
+
+		context.addLogEntry(unit.getName(), "mode_switch", unit.getName()
+				+ KoreanUtil.getJosa(unit.getName(), "이 ", "가 ") + modeName + "로 전환했습니다. " + description);
 	}
 
 	@Override
@@ -58,48 +57,46 @@ public class FormChangeAbility implements SpecialAbility {
 
 	@Override
 	public String getName() {
-		return "FormChange";
+		return "ModeSwitch";
 	}
-	
+
 	private static int getFormCount(BattleMonsterUnit monster) {
-		// Todo 추후에 수정해야함
-		// static으로 해야하는가? 혹은 special에 따라 BattleMonsterUnit에 변수가 추가되는 식으로 해야하는가?
 		return monster.getFormCount();
 	}
-	
+
 	public static boolean shouldUseOffensiveStance(int formCount, int currentTurn) {
-		boolean isOddTurn = currentTurn %2 == 1;
-		
-		if(formCount == 0) {
+		boolean isOddTurn = currentTurn % 2 == 1;
+
+		if (formCount == 0) {
 			return isOddTurn;
-		}else {
+		} else {
 			return !isOddTurn;
 		}
 	}
-	
+
 	public static double getAttackMultiplier(BattleUnit unit, int currentTurn) {
-		if(!(unit instanceof BattleMonsterUnit)) {
+		if (!(unit instanceof BattleMonsterUnit)) {
 			return 1.0;
 		}
-		
+
 		BattleMonsterUnit monster = (BattleMonsterUnit) unit;
-		if(!"FormChange".equals(monster.getSpecial())) {
+		if (!"ModeSwitch".equals(monster.getSpecial())) {
 			return 1.0;
 		}
-		
+
 		int formCount = getFormCount(monster);
 		boolean isOffensive = shouldUseOffensiveStance(formCount, currentTurn);
-		
+
 		return isOffensive ? OFFENSE_ATK_MULTIPLIER : DEFENSE_ATK_MULTIPLIER;
 	}
 	
-	public static double getDefenseMultiplier(BattleUnit unit, int currentTurn) {
+	public static double getDefenseMulitplier(BattleUnit unit, int currentTurn) {
 		if(!(unit instanceof BattleMonsterUnit)) {
 			return 1.0;
 		}
 		
 		BattleMonsterUnit monster = (BattleMonsterUnit) unit;
-		if(!"FormChange".equals(monster.getSpecial())) {
+		if(!"ModeSwitch".equals(monster.getSpecial())) {
 			return 1.0;
 		}
 		

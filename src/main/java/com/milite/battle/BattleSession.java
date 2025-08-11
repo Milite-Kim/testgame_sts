@@ -5,6 +5,8 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import com.milite.battle.abilities.BlindAbility;
+import com.milite.battle.abilities.FormChangeAbility;
+import com.milite.battle.abilities.ModeSwitchAbility;
 import com.milite.battle.abilities.ThreeChanceAbility;
 import com.milite.battle.abilities.ThreeStackAbility;
 import com.milite.dto.BattleResultDto;
@@ -173,7 +175,7 @@ public class BattleSession {
 
 					damageMessage = actor + actorJosa + target.getName() + "에게 " + damage + "의 피해를 입혔습니다.";
 				}
-				
+
 				battleState.addDetail(damageMessage);
 
 				monster.executeOnHit(target, damage, context);
@@ -265,6 +267,10 @@ public class BattleSession {
 			multiplier = ThreeChanceAbility.getDamageMultiplier(monster, this.currentTurn);
 		} else if ("ThreeStack".equals(monster.getSpecial())) {
 			multiplier = ThreeStackAbility.getDamageMultiplier(monster, this.currentTurn);
+		} else if ("FormChange".equals(monster.getSpecial())) {
+			multiplier = FormChangeAbility.getAttackMultiplier(monster, this.currentTurn);
+		} else if ("ModeSwitch".equals(monster.getSpecial())) {
+			multiplier = ModeSwitchAbility.getAttackMultiplier(monster, this.currentTurn);
 		}
 
 		int finalDamage = (int) Math.round(baseDamage * multiplier);
