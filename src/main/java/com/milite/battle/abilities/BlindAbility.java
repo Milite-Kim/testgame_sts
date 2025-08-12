@@ -2,12 +2,12 @@ package com.milite.battle.abilities;
 
 import com.milite.battle.BattleContext;
 import com.milite.battle.BattleUnit;
+import static com.milite.constants.BattleConstants.*;
 import com.milite.util.KoreanUtil;
 
 public class BlindAbility implements SpecialAbility {
 	private static final int BLIND_CHANCE = 25;
 	private static final int BLIND_TURN = 1;
-	private static final String STATUS_BLIND = "blind";
 
 	@Override
 	public void onAttack(BattleUnit attacker, BattleUnit target, BattleContext context) {
@@ -34,7 +34,7 @@ public class BlindAbility implements SpecialAbility {
 				context.addLogEntry(attacker.getName(), "blind_refresh",
 						attacker.getName() + "의 공격으로 " + target.getName() + "의 실명이 갱신되었습니다!");
 			} else {
-				context.addLogEntry(attacker.getName(), "blind", attacker.getName() + "의 공격으로 " + target.getName()
+				context.addLogEntry(attacker.getName(), STATUS_BLIND, attacker.getName() + "의 공격으로 " + target.getName()
 						+ KoreanUtil.getJosa(target.getName(), "이 ", "가 ") + "실명 상태에 걸렸습니다!");
 			}
 		}
@@ -67,7 +67,7 @@ public class BlindAbility implements SpecialAbility {
 
 	public static boolean isBlind(BattleUnit unit) {
 		if (unit.getStatusEffects() != null) {
-			return unit.getStatusEffects().getOrDefault("Blind", 0) > 0;
+			return unit.getStatusEffects().getOrDefault(STATUS_BLIND, 0) > 0;
 		}
 		return false;
 	}

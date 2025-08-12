@@ -4,11 +4,14 @@ import lombok.*;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static com.milite.constants.BattleConstants.*;
 import com.milite.battle.abilities.BlindAbility;
 import com.milite.battle.abilities.FormChangeAbility;
 import com.milite.battle.abilities.ModeSwitchAbility;
 import com.milite.battle.abilities.ThreeChanceAbility;
 import com.milite.battle.abilities.ThreeStackAbility;
+import com.milite.battle.artifacts.ElementStoneArtifact;
+import com.milite.battle.artifacts.PlayerArtifact;
 import com.milite.dto.BattleResultDto;
 import com.milite.dto.PlayerDto;
 import com.milite.dto.SkillDto;
@@ -41,6 +44,11 @@ public class BattleSession {
 			return new BattleResultDto("잘못된 대상 접근", 0, 0, false, false, null);
 		}
 
+		PlayerDto player = (PlayerDto) attacker;
+
+		// 턴 시작 시의 아티팩트
+		player.executeArtifactsOnTurnStart(context);
+
 		List<BattleUnit> validTargets = getValidTargets(allUnits, attacker);
 		BattleState battleState = new BattleState();
 
@@ -50,9 +58,12 @@ public class BattleSession {
 		// 공격자의 공격력 받아오기
 
 		for (int hitCount = 0; hitCount < skill.getHit_time(); hitCount++) {
-			executeAttackByTypeWithContext(skill.getTarget(), validTargets, targetIndex, attacker, skill, attackerAtk,
-					actor, actorJosa, battleState, context);
+			executeAttackByType(skill.getTarget(), validTargets, targetIndex, attacker, skill, attackerAtk, actor,
+					actorJosa, battleState, context);
 		}
+
+		// 턴 종료 시의 아티팩트
+		player.executeArtifactsOnTurnEnd(context);
 
 		boolean isDefeated = checkBattleEnd(allUnits, attacker);
 		String fullDetails = String.join("\n", battleState.getDetails());
@@ -78,10 +89,10 @@ public class BattleSession {
 		if (player == null) {
 			return new BattleResultDto("공격 대상 없음", 0, 0, false, true, new ArrayList<>());
 		}
-		return processMonsterAttackWithContext(attacker, player, context);
+		return processMonsterAttack(attacker, player, context);
 	}
 
-	private void executeAttackByTypeWithContext(String targetType, List<BattleUnit> validTargets, Integer targetIndex,
+	private void executeAttackByType(String targetType, List<BattleUnit> validTargets, Integer targetIndex,
 			BattleUnit attacker, SkillDto skill, int attackerAtk, String actor, String actorJosa,
 			BattleState battleState, BattleContext context) {
 		switch (targetType) {
@@ -89,15 +100,13 @@ public class BattleSession {
 			if (targetIndex < validTargets.size()) {
 				BattleUnit target = validTargets.get(targetIndex);
 				if (target.isAlive()) {
-					executeAttackOnTargetWithContext(attacker, target, skill, attackerAtk, actor, actorJosa,
-							battleState, context);
+					executeAttackOnTarget(attacker, target, skill, attackerAtk, actor, actorJosa, battleState, context);
 				}
 			}
 			break;
 		case "All":
-			validTargets.stream().filter(BattleUnit::isAlive)
-					.forEach(target -> executeAttackOnTargetWithContext(attacker, target, skill, attackerAtk, actor,
-							actorJosa, battleState, context));
+			validTargets.stream().filter(BattleUnit::isAlive).forEach(target -> executeAttackOnTarget(attacker, target,
+					skill, attackerAtk, actor, actorJosa, battleState, context));
 			break;
 		case "Random":
 			List<BattleUnit> aliveTargets = validTargets.stream().filter(BattleUnit::isAlive)
@@ -106,21 +115,34 @@ public class BattleSession {
 			if (!aliveTargets.isEmpty()) {
 				int randomIndex = CommonUtil.Dice(aliveTargets.size());
 				BattleUnit target = aliveTargets.get(randomIndex);
-				executeAttackOnTargetWithContext(attacker, target, skill, attackerAtk, actor, actorJosa, battleState,
-						context);
+				executeAttackOnTarget(attacker, target, skill, attackerAtk, actor, actorJosa, battleState, context);
 			}
 			break;
 		}
 	}
 
-	private void executeAttackOnTargetWithContext(BattleUnit attacker, BattleUnit target, SkillDto skill,
-			int attackerAtk, String actor, String actorJosa, BattleState battleState, BattleContext context) {
+	private void executeAttackOnTarget(BattleUnit attacker, BattleUnit target, SkillDto skill, int attackerAtk,
+			String actor, String actorJosa, BattleState battleState, BattleContext context) {
 		int targetLuck = getTargetLuck(target);
 		boolean isHit = isAttacked(targetLuck);
 
+		if (attacker.getUnitType().equals("Player")) {
+			PlayerDto player = (PlayerDto) attacker;
+			player.executeArtifactsOnAttack(target, context);
+		}
+
 		if (isHit) {
 			int baseDamage = calcAtk(attackerAtk, skill);
-			double elementMultiplier = calculateElementMultiplier(skill.getElement(), getTargetElement(target));
+
+			double elementMultiplier;
+			if (attacker.getUnitType().equals("Player")) {
+				PlayerDto player = (PlayerDto) attacker;
+				elementMultiplier = calculateFinalElementMultiplier(player, skill.getElement(),
+						getTargetElement(target));
+			} else {
+				elementMultiplier = calculateElementMultiplier(skill.getElement(), getTargetElement(target));
+			}
+
 			int finalDamage = (int) (baseDamage * elementMultiplier);
 
 			String damageMessage = buildDamageMessage(actor, actorJosa, target.getName(), finalDamage,
@@ -132,6 +154,11 @@ public class BattleSession {
 			context.damageUnit(target, finalDamage);
 			battleState.addDamage(finalDamage);
 			battleState.setAnyHit(true);
+
+			if (attacker.getUnitType().equals("Player")) {
+				PlayerDto player = (PlayerDto) attacker;
+				player.executeArtifactsOnHit(target, finalDamage, context);
+			}
 
 			if (wasAliveBeforeHit && target instanceof BattleMonsterUnit) {
 				BattleMonsterUnit monster = (BattleMonsterUnit) target;
@@ -149,8 +176,7 @@ public class BattleSession {
 		}
 	}
 
-	private BattleResultDto processMonsterAttackWithContext(BattleUnit attacker, BattleUnit target,
-			BattleContext context) {
+	private BattleResultDto processMonsterAttack(BattleUnit attacker, BattleUnit target, BattleContext context) {
 		BattleMonsterUnit monster = (BattleMonsterUnit) attacker;
 		String actor = attacker.getName();
 		String actorJosa = KoreanUtil.getJosa(actor, "이 ", "가 ");
@@ -213,8 +239,24 @@ public class BattleSession {
 	}
 
 	private double calculateElementMultiplier(String attackElement, String targetElement) {
-		return ELEMENT_EFFECTIVENESS.getOrDefault(attackElement, ELEMENT_EFFECTIVENESS.get("None"))
-				.getOrDefault(targetElement, 1.0);
+		return ELEMENT_EFFECTIVENESS.get(attackElement).get(targetElement);
+	}
+
+	private double calculateFinalElementMultiplier(PlayerDto player, String attackElement, String targetElement) {
+		double baseMultiplier = calculateElementMultiplier(attackElement, targetElement);
+
+		double totalBonus = 0.0;
+
+		for (PlayerArtifact artifact : player.getArtifacts()) {
+			if (artifact instanceof ElementStoneArtifact) {
+				ElementStoneArtifact stone = (ElementStoneArtifact) artifact;
+				totalBonus += stone.getElementBonus(baseMultiplier, attackElement, targetElement);
+			}
+
+			// 나중에 동일 역할을 하는 아티팩트가 있다면 여기에 추가
+		}
+
+		return baseMultiplier + totalBonus;
 	}
 
 	private String getTargetElement(BattleUnit target) {
@@ -320,8 +362,8 @@ public class BattleSession {
 	}
 
 	private boolean isAttacked(int luck, BattleUnit attacker, BattleUnit target) {
-		int n = CommonUtil.Dice(15);
-		int dodgeChance = n * 2 + luck;
+		int n = CommonUtil.Dice(BASE_DODGE_ROLL);
+		int dodgeChance = n * DODGE_MULTIPLIER + luck;
 
 		if (attacker != null && attacker.getUnitType().equals("Player")) {
 			if (BlindAbility.isBlind(attacker)) {

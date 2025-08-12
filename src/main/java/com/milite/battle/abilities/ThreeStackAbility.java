@@ -52,7 +52,7 @@ public class ThreeStackAbility implements SpecialAbility {
 	public static double getDamageMultiplier(BattleUnit unit, int currentTurn) {
 		if (unit instanceof BattleMonsterUnit) {
 			BattleMonsterUnit monster = (BattleMonsterUnit) unit;
-			if ("ThreeChance".equals(monster.getSpecial()) && isThreeMultipleTurn(currentTurn)) {
+			if ("ThreeStack".equals(monster.getSpecial()) && isThreeMultipleTurn(currentTurn)) {
 				return DAMAGE_MULTIPLIER;
 			}
 		}

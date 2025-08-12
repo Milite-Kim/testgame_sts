@@ -5,10 +5,10 @@ import java.util.List;
 import com.milite.battle.BattleContext;
 import com.milite.battle.BattleMonsterUnit;
 import com.milite.battle.BattleUnit;
+import static com.milite.constants.BattleConstants.*;
 import com.milite.util.KoreanUtil;
 
 public class SummonAbility implements SpecialAbility {
-	private static final int SERVANT_MONSTER_ID = 52;
 	private static final int MAX_SERVANTS = 2;
 	private static final int SUMMON_CHANCE = 25;
 
@@ -72,7 +72,6 @@ public class SummonAbility implements SpecialAbility {
 
 	public void performSummon(BattleUnit summoner, BattleContext context) {
 		context.addLogEntry(summoner.getName(), "summon",
-	            summoner.getName() + KoreanUtil.getJosa(summoner.getName(), "이 ", "가 ") +
-	            "따라오는 혼들 중 하나에게 손짓을 하였다");
+				summoner.getName() + KoreanUtil.getJosa(summoner.getName(), "이 ", "가 ") + "따라오는 혼들 중 하나에게 손짓을 하였다");
 	}
 }

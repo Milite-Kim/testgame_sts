@@ -1,5 +1,7 @@
 package com.milite.service;
 
+import static com.milite.constants.BattleConstants.*;
+
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -35,15 +37,6 @@ public class BattleServiceImpl implements BattleService {
 	private final Map<String, BattleMonsterUnit> MonsterMemory = new HashMap<>();
 	private final Map<String, BattleSession> SessionMemory = new HashMap<>();
 
-	private static final String STATUS_BURN = "Burn"; // 화상
-	private static final String STATUS_POISON = "Poison"; // 중독
-	private static final String STATUS_FREEZE = "Freeze"; // 빙결
-	private static final String STATUS_STUN = "Stun"; // 기절
-
-	private static final int BURN_DAMAGE = 3; // 이 부분은 화상 데미지 결정되면 그 때 수정
-
-	private static final String STATUS_BLIND= "Blind";
-	
 	public BattleResultDto processNextAction(String PlayerID, SkillDto playerSkill, Integer targetIndex) {
 
 		BattleSession session = SessionMemory.get(PlayerID);
@@ -249,7 +242,7 @@ public class BattleServiceImpl implements BattleService {
 
 		if (monster instanceof BattleMonsterUnit) {
 			BattleMonsterUnit battleMonster = (BattleMonsterUnit) monster;
-			if (battleMonster.getID() != null && battleMonster.getID() == 51) {
+			if (battleMonster.getID() != null && battleMonster.getID() == SUMMON_MASTER_ID) {
 				return processSummonMaster(session, battleMonster, actionLogs, allLogs, context);
 			}
 		}
@@ -339,7 +332,7 @@ public class BattleServiceImpl implements BattleService {
 
 		boolean summonMasterAlive = session.getEnemy().stream().filter(monster -> monster instanceof BattleMonsterUnit)
 				.map(monster -> (BattleMonsterUnit) monster)
-				.anyMatch(monster -> monster.getID() != null && monster.getID() == 51 && monster.isAlive());
+				.anyMatch(monster -> monster.getID() != null && monster.getID() == SUMMON_MASTER_ID && monster.isAlive());
 
 		if (!summonMasterAlive && hasSummonMaster(session)) {
 			killAllServants(session);
@@ -415,15 +408,14 @@ public class BattleServiceImpl implements BattleService {
 			decreaseStatusTurns(unit, STATUS_POISON);
 		}
 
-		if(statusMap.containsKey(STATUS_BLIND) && statusMap.get(STATUS_BLIND)>0) {
-			decreaseStatusTurns(unit,STATUS_BLIND);
-			if(statusMap.getOrDefault(STATUS_BLIND, 0)<=0) {
-				context.addLogEntry(unit.getName(), "status_clear", 
-						unit.getName() + KoreanUtil.getJosa(unit.getName(), "의 ", "의 ") + 
-						"실명이 해제되었습니다.");
+		if (statusMap.containsKey(STATUS_BLIND) && statusMap.get(STATUS_BLIND) > 0) {
+			decreaseStatusTurns(unit, STATUS_BLIND);
+			if (statusMap.getOrDefault(STATUS_BLIND, 0) <= 0) {
+				context.addLogEntry(unit.getName(), "status_clear",
+						unit.getName() + KoreanUtil.getJosa(unit.getName(), "의 ", "의 ") + "실명이 해제되었습니다.");
 			}
 		}
-		
+
 		logs.addAll(context.getLogs());
 	}
 
@@ -676,13 +668,13 @@ public class BattleServiceImpl implements BattleService {
 	private boolean hasSummonMaster(BattleSession session) {
 		return session.getEnemy().stream().filter(monster -> monster instanceof BattleMonsterUnit)
 				.map(monster -> (BattleMonsterUnit) monster)
-				.anyMatch(monster -> monster.getID() != null && monster.getID() == 51);
+				.anyMatch(monster -> monster.getID() != null && monster.getID() == SUMMON_MASTER_ID);
 	}
 
 	private void killAllServants(BattleSession session) {
 		session.getEnemy().stream().filter(monster -> monster instanceof BattleMonsterUnit)
 				.map(monster -> (BattleMonsterUnit) monster)
-				.filter(monster -> monster.getID() != null && monster.getID() == 52).forEach(servant -> {
+				.filter(monster -> monster.getID() != null && monster.getID() == SERVANT_MONSTER_ID).forEach(servant -> {
 					servant.setHp(0);
 					servant.setAlive(false);
 				});

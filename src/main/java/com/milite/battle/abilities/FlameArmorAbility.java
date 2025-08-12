@@ -43,6 +43,6 @@ public class FlameArmorAbility implements SpecialAbility {
 
 	@Override
 	public String getName() {
-		return "DoubleAttack";
+		return "FlameArmor";
 	}
 }
