@@ -32,13 +32,22 @@ public class BattleController {
 
 			Map<String, Object> battleStatus = service.getBattleStatus(PlayerID);
 
-			return ResponseEntity.ok(Map.of("stage", "battleReady", "message", "전투가 시작되었습니다. 스킬을 선택해주세요", "initResult",
-					initResult, "battleStatus", battleStatus, "needsPlayerInput", battleStatus.get("needsPlayerInput"),
-					"currentUnit", battleStatus.get("currentUnit"), "playerHp", battleStatus.get("playerHp"),
-					"aliveMonsters", battleStatus.get("aliveMonsters")));
+			Map<String, Object> responseMap = new HashMap<>();
+			responseMap.put("stage", "battleReady");
+			responseMap.put("message", "전투가 시작되었습니다. 스킬을 선택해주세요");
+			responseMap.put("initResult", initResult);
+			responseMap.put("battleStatus", battleStatus);
+			responseMap.put("needsPlayerInput", battleStatus.get("needsPlayerInput"));
+			responseMap.put("currentUnit", battleStatus.get("currentUnit"));
+			responseMap.put("playerHp", battleStatus.get("playerHp"));
+			responseMap.put("aliveMonsters", battleStatus.get("aliveMonsters"));
+
+			return ResponseEntity.ok(responseMap);
 		} catch (Exception e) {
 			e.printStackTrace();
-			return ResponseEntity.badRequest().body(Map.of("error", "전투 시작 중 오류 발생" + e.getMessage()));
+			Map<String, Object> errorMap = new HashMap<>();
+			errorMap.put("error", "전투 시작 중 오류 발생: " + e.getMessage());
+			return ResponseEntity.badRequest().body(errorMap);
 		}
 	}
 
@@ -54,15 +63,19 @@ public class BattleController {
 			Boolean needsPlayerInput = (Boolean) currentStatus.get("needsPlayerInput");
 
 			if (needsPlayerInput == null || !needsPlayerInput) {
-				return ResponseEntity.badRequest()
-						.body(Map.of("error", "현재 플레이어 턴이 아닙니다", "currentStatus", currentStatus));
+				 Map<String, Object> errorMap = new HashMap<>();
+	                errorMap.put("error", "현재 플레이어 턴이 아닙니다");
+	                errorMap.put("currentStatus", currentStatus);
+	                return ResponseEntity.badRequest().body(errorMap);
 			}
 
 			// 스킬 조회 메서드
 			SkillDto skill = getSkillInfo(SkillID);
 
 			if (skill == null) {
-				return ResponseEntity.badRequest().body(Map.of("error", "존재하지 않는 스킬입니다 : " + SkillID));
+				 Map<String, Object> errorMap = new HashMap<>();
+	                errorMap.put("error", "존재하지 않는 스킬입니다 : " + SkillID);
+	                return ResponseEntity.badRequest().body(errorMap);
 			}
 
 			BattleResultDto battleResult = service.processNextAction(PlayerID, skill, targetIndex);
@@ -71,14 +84,20 @@ public class BattleController {
 
 			boolean battleEnded = checkBattleEndCondition(updateStatus);
 
-			Map<String, Object> response = Map.of("stage", battleEnded ? "battleEnded" : "battleContinue",
-					"battleResult", battleResult, "updateStatus", updateStatus, "battleEnded", battleEnded,
-					"needsPlayerInput", updateStatus.get("needsPlayerInput"), "nextAction",
-					battleEnded ? "goToEnd" : "waitForNextInput");
-			return ResponseEntity.ok(response);
+			 Map<String, Object> response = new HashMap<>();
+	            response.put("stage", battleEnded ? "battleEnded" : "battleContinue");
+	            response.put("battleResult", battleResult);
+	            response.put("updateStatus", updateStatus);
+	            response.put("battleEnded", battleEnded);
+	            response.put("needsPlayerInput", updateStatus.get("needsPlayerInput"));
+	            response.put("nextAction", battleEnded ? "goToEnd" : "waitForNextInput");
+	            
+	            return ResponseEntity.ok(response);
 		} catch (Exception e) {
 			e.printStackTrace();
-			return ResponseEntity.badRequest().body(Map.of("error", "전투 실행 중 오류 발생 : " + e.getMessage()));
+			Map<String, Object> errorMap = new HashMap<>();
+            errorMap.put("error", "전투 실행 중 오류 발생 : " + e.getMessage());
+            return ResponseEntity.badRequest().body(errorMap);
 		}
 	}
 
@@ -105,28 +124,39 @@ public class BattleController {
 				rewards = Map.of("message", "패배하였습니다.");
 				System.out.println("플레이어 패배");
 			} else {
-				battleResult = "error";
-				return ResponseEntity.badRequest().body(Map.of("error", "비정상적인 전투 종료 상태", "finalStatus", finalStatus));
+				 Map<String, Object> errorMap = new HashMap<>();
+	                errorMap.put("error", "비정상적인 전투 종료 상태");
+	                errorMap.put("finalStatus", finalStatus);
+	                return ResponseEntity.badRequest().body(errorMap);
 			}
 
 			cleanupBattleSession(PlayerID);
 
-			return ResponseEntity.ok(Map.of("stage", "completed", "battleResult", battleResult, "rewards", rewards,
-					"finalStatus", finalStatus, "message",
-					battleResult.equals("Victory") ? "전투에서 승리하였습니다." : "전투에서 패배하였습니다."));
+			  Map<String, Object> responseMap = new HashMap<>();
+	            responseMap.put("stage", "completed");
+	            responseMap.put("battleResult", battleResult);
+	            responseMap.put("rewards", rewards);
+	            responseMap.put("finalStatus", finalStatus);
+	            responseMap.put("message", battleResult.equals("Victory") 
+	                    ? "전투에서 승리하였습니다." 
+	                    : "전투에서 패배하였습니다.");
+	            
+	            return ResponseEntity.ok(responseMap);
 		} catch (Exception e) {
 			e.printStackTrace();
-			return ResponseEntity.badRequest().body(Map.of("error", "전투 종료 중 오류 발생 : " + e.getMessage()));
+			Map<String, Object> errorMap = new HashMap<>();
+            errorMap.put("error", "전투 종료 중 오류 발생 : " + e.getMessage());
+            return ResponseEntity.badRequest().body(errorMap);
 		}
 	}
 
-	@GetMapping("/test")
+	/*@GetMapping("/test")
 	@ResponseBody
 	public ResponseEntity<String> test() {
-	    System.out.println("=== TEST 메서드 호출됨 ===");
-	    System.out.println("현재 시간: " + new java.util.Date());
-	    return ResponseEntity.ok("테스트 성공! 컨트롤러가 정상 작동합니다.");
-	}
+		System.out.println("=== TEST 메서드 호출됨 ===");
+		System.out.println("현재 시간: " + new java.util.Date());
+		return ResponseEntity.ok("테스트 성공! 컨트롤러가 정상 작동합니다.");
+	}*/
 
 	@GetMapping("/status")
 	@ResponseBody
@@ -140,7 +170,9 @@ public class BattleController {
 
 			return ResponseEntity.ok(status);
 		} catch (Exception e) {
-			return ResponseEntity.badRequest().body(Map.of("error", "상태 조회 중 오류 발생 : " + e.getMessage()));
+			Map<String, Object> errorMap = new HashMap<>();
+            errorMap.put("error", "상태 조회 중 오류 발생 : " + e.getMessage());
+            return ResponseEntity.badRequest().body(errorMap);
 		}
 	}
 

@@ -30,13 +30,6 @@ public class BattleSession {
 	private List<BattleUnit> actionOrder = new ArrayList<>();
 	private int currentActionIndex = 0;
 
-	private static final Map<String, Map<String, Double>> ELEMENT_EFFECTIVENESS = Map.of(
-			// 속성 상성표
-			"Fire", Map.of("Grass", 1.2, "Water", 0.8, "Fire", 1.0, "None", 1.0), "Water",
-			Map.of("Fire", 1.2, "Grass", 0.8, "Water", 1.0, "None", 1.0), "Grass",
-			Map.of("Water", 1.2, "Fire", 0.8, "Grass", 1.0, "None", 1.0), "None",
-			Map.of("Fire", 1.0, "Water", 1.0, "Grass", 1.0, "None", 1.0));
-
 	public BattleResultDto battleTurn(BattleUnit attacker, List<BattleUnit> allUnits, Integer targetIndex,
 			SkillDto skill, BattleContext context) {
 		// 플레이어가 하는 공격처리
@@ -244,13 +237,14 @@ public class BattleSession {
 
 	private double calculateFinalElementMultiplier(PlayerDto player, String attackElement, String targetElement) {
 		double baseMultiplier = calculateElementMultiplier(attackElement, targetElement);
-
 		double totalBonus = 0.0;
 
 		for (PlayerArtifact artifact : player.getArtifacts()) {
 			if (artifact instanceof ElementStoneArtifact) {
 				ElementStoneArtifact stone = (ElementStoneArtifact) artifact;
-				totalBonus += stone.getElementBonus(baseMultiplier, attackElement, targetElement);
+				if (stone.hasElementAdvantage(baseMultiplier)) {
+					totalBonus += stone.getElementAdvantageBonus();
+				}
 			}
 
 			// 나중에 동일 역할을 하는 아티팩트가 있다면 여기에 추가

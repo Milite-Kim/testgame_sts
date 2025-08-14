@@ -20,9 +20,9 @@ public interface PlayerArtifact {
 
 	String getArtifactDescription();
 
-	default String getArtifactRarity() {
+	/*default String getArtifactRarity() {
 		return "Common";
-	}
+	} 아마 아티팩트에 등급을 넣지 않을 것으로 생각됨*/
 
 	default boolean isActive() {
 		return true;

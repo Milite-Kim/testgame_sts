@@ -1,5 +1,7 @@
 package com.milite.constants;
 
+import java.util.Map;
+
 public class BattleConstants {
 	public static final String STATUS_BURN = "Burn"; // 화상
 	public static final String STATUS_POISON = "Poison"; // 중독
@@ -16,4 +18,10 @@ public class BattleConstants {
 	public static final int DODGE_MULTIPLIER = 2;
 
 	public static final int BLIND_DODGE_BONUS = 50;
+
+	public static final Map<String, Map<String, Double>> ELEMENT_EFFECTIVENESS = Map.of("Fire",
+			Map.of("Grass", 1.2, "Water", 0.8, "Fire", 1.0, "None", 1.0), "Water",
+			Map.of("Fire", 1.2, "Grass", 0.8, "Water", 1.0, "None", 1.0), "Grass",
+			Map.of("Water", 1.2, "Fire", 0.8, "Grass", 1.0, "None", 1.0), "None",
+			Map.of("Fire", 1.0, "Water", 1.0, "Grass", 1.0, "None", 1.0));
 }

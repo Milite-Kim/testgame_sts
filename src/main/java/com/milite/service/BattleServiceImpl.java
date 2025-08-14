@@ -126,10 +126,24 @@ public class BattleServiceImpl implements BattleService {
 		return new BattleResultDto("전투 시작", 0, 0, false, false, new ArrayList<>());
 	}
 
+	@Override
 	public Map<String, Object> getBattleStatus(String PlayerID) {
 		BattleSession session = SessionMemory.get(PlayerID);
 		if (session == null) {
-			return Map.of("error", "전투 세션을 찾을 수 없음");
+			System.out.println("❌ 전투 세션을 찾을 수 없음: " + PlayerID);
+			System.out.println("현재 저장된 세션들: " + SessionMemory.keySet());
+
+			// 세션이 없을 때 기본값 반환 (에러 대신)
+			Map<String, Object> defaultStatus = new HashMap<>();
+			defaultStatus.put("error", "전투 세션을 찾을 수 없음");
+			defaultStatus.put("isFinished", true);
+			defaultStatus.put("currentTurn", 0);
+			defaultStatus.put("needsPlayerInput", false);
+			defaultStatus.put("currentUnit", null);
+			defaultStatus.put("playerHp", 0);
+			defaultStatus.put("playerMaxHp", 100);
+			defaultStatus.put("aliveMonsters", new ArrayList<>());
+			return defaultStatus;
 		}
 
 		BattleUnit currentUnit = getCurrentActionUnit(session);
@@ -147,6 +161,7 @@ public class BattleServiceImpl implements BattleService {
 		status.put("aliveMonsters", session.getEnemy().stream().filter(BattleUnit::isAlive).map(BattleUnit::getName)
 				.collect(Collectors.toList()));
 
+		System.out.println("✅ 전투 상태 조회 성공: " + status);
 		return status;
 	}
 
@@ -331,8 +346,8 @@ public class BattleServiceImpl implements BattleService {
 		boolean playerAlive = session.getPlayer().isAlive();
 
 		boolean summonMasterAlive = session.getEnemy().stream().filter(monster -> monster instanceof BattleMonsterUnit)
-				.map(monster -> (BattleMonsterUnit) monster)
-				.anyMatch(monster -> monster.getID() != null && monster.getID() == SUMMON_MASTER_ID && monster.isAlive());
+				.map(monster -> (BattleMonsterUnit) monster).anyMatch(
+						monster -> monster.getID() != null && monster.getID() == SUMMON_MASTER_ID && monster.isAlive());
 
 		if (!summonMasterAlive && hasSummonMaster(session)) {
 			killAllServants(session);
@@ -674,7 +689,8 @@ public class BattleServiceImpl implements BattleService {
 	private void killAllServants(BattleSession session) {
 		session.getEnemy().stream().filter(monster -> monster instanceof BattleMonsterUnit)
 				.map(monster -> (BattleMonsterUnit) monster)
-				.filter(monster -> monster.getID() != null && monster.getID() == SERVANT_MONSTER_ID).forEach(servant -> {
+				.filter(monster -> monster.getID() != null && monster.getID() == SERVANT_MONSTER_ID)
+				.forEach(servant -> {
 					servant.setHp(0);
 					servant.setAlive(false);
 				});
