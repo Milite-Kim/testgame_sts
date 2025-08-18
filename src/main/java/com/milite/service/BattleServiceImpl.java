@@ -1,7 +1,5 @@
 package com.milite.service;
 
-import static com.milite.constants.BattleConstants.*;
-
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -19,6 +17,7 @@ import com.milite.mapper.CharacterStatusMapper;
 import com.milite.mapper.MonsterMapper;
 import com.milite.util.CommonUtil;
 import com.milite.util.KoreanUtil;
+import com.milite.constants.BattleConstants;
 
 import lombok.Setter;
 import lombok.extern.log4j.Log4j;
@@ -130,7 +129,7 @@ public class BattleServiceImpl implements BattleService {
 	public Map<String, Object> getBattleStatus(String PlayerID) {
 		BattleSession session = SessionMemory.get(PlayerID);
 		if (session == null) {
-			System.out.println("❌ 전투 세션을 찾을 수 없음: " + PlayerID);
+			System.out.println("전투 세션을 찾을 수 없음: " + PlayerID);
 			System.out.println("현재 저장된 세션들: " + SessionMemory.keySet());
 
 			// 세션이 없을 때 기본값 반환 (에러 대신)
@@ -257,7 +256,7 @@ public class BattleServiceImpl implements BattleService {
 
 		if (monster instanceof BattleMonsterUnit) {
 			BattleMonsterUnit battleMonster = (BattleMonsterUnit) monster;
-			if (battleMonster.getID() != null && battleMonster.getID() == SUMMON_MASTER_ID) {
+			if (battleMonster.getID() != null && battleMonster.getID() == BattleConstants.getSummonMasterId()) {
 				return processSummonMaster(session, battleMonster, actionLogs, allLogs, context);
 			}
 		}
@@ -346,8 +345,8 @@ public class BattleServiceImpl implements BattleService {
 		boolean playerAlive = session.getPlayer().isAlive();
 
 		boolean summonMasterAlive = session.getEnemy().stream().filter(monster -> monster instanceof BattleMonsterUnit)
-				.map(monster -> (BattleMonsterUnit) monster).anyMatch(
-						monster -> monster.getID() != null && monster.getID() == SUMMON_MASTER_ID && monster.isAlive());
+				.map(monster -> (BattleMonsterUnit) monster).anyMatch(monster -> monster.getID() != null
+						&& monster.getID() == BattleConstants.getSummonMasterId() && monster.isAlive());
 
 		if (!summonMasterAlive && hasSummonMaster(session)) {
 			killAllServants(session);
@@ -412,20 +411,20 @@ public class BattleServiceImpl implements BattleService {
 			return;
 		}
 
-		if (statusMap.containsKey(STATUS_BURN) && statusMap.get(STATUS_BURN) > 0) {
-			context.damageUnit(unit, BURN_DAMAGE);
-			decreaseStatusTurns(unit, STATUS_BURN);
+		if (statusMap.containsKey(BattleConstants.STATUS_BURN) && statusMap.get(BattleConstants.STATUS_BURN) > 0) {
+			context.damageUnit(unit, BattleConstants.getBurnDamage());
+			decreaseStatusTurns(unit, BattleConstants.STATUS_BURN);
 		}
 
-		if (statusMap.containsKey(STATUS_POISON) && statusMap.get(STATUS_POISON) > 0) {
-			int poisonDamage = statusMap.get(STATUS_POISON);
+		if (statusMap.containsKey(BattleConstants.STATUS_POISON) && statusMap.get(BattleConstants.STATUS_POISON) > 0) {
+			int poisonDamage = statusMap.get(BattleConstants.STATUS_POISON);
 			context.damageUnit(unit, poisonDamage);
-			decreaseStatusTurns(unit, STATUS_POISON);
+			decreaseStatusTurns(unit, BattleConstants.STATUS_POISON);
 		}
 
-		if (statusMap.containsKey(STATUS_BLIND) && statusMap.get(STATUS_BLIND) > 0) {
-			decreaseStatusTurns(unit, STATUS_BLIND);
-			if (statusMap.getOrDefault(STATUS_BLIND, 0) <= 0) {
+		if (statusMap.containsKey(BattleConstants.STATUS_BLIND) && statusMap.get(BattleConstants.STATUS_BLIND) > 0) {
+			decreaseStatusTurns(unit, BattleConstants.STATUS_BLIND);
+			if (statusMap.getOrDefault(BattleConstants.STATUS_BLIND, 0) <= 0) {
 				context.addLogEntry(unit.getName(), "status_clear",
 						unit.getName() + KoreanUtil.getJosa(unit.getName(), "의 ", "의 ") + "실명이 해제되었습니다.");
 			}
@@ -517,7 +516,8 @@ public class BattleServiceImpl implements BattleService {
 		if (statusMap == null) {
 			return false;
 		}
-		return (statusMap.getOrDefault(STATUS_FREEZE, 0) > 0 || statusMap.getOrDefault(STATUS_STUN, 0) > 0);
+		return (statusMap.getOrDefault(BattleConstants.STATUS_FREEZE, 0) > 0
+				|| statusMap.getOrDefault(BattleConstants.STATUS_STUN, 0) > 0);
 	}
 
 	private String getDisableStatusName(BattleUnit unit) { // 행동 불가가 된 이유는?
@@ -525,18 +525,18 @@ public class BattleServiceImpl implements BattleService {
 		if (statusMap == null) {
 			return "";
 		}
-		if (statusMap.getOrDefault(STATUS_FREEZE, 0) > 0) {
+		if (statusMap.getOrDefault(BattleConstants.STATUS_FREEZE, 0) > 0) {
 			return "빙결";
 		}
-		if (statusMap.getOrDefault(STATUS_STUN, 0) > 0) {
+		if (statusMap.getOrDefault(BattleConstants.STATUS_STUN, 0) > 0) {
 			return "기절";
 		}
 		return "";
 	}
 
 	private void decreaseDisableStatusTurns(BattleUnit unit) { // 행동 불가 시 해당 상태 턴 수 줄이기 위함
-		decreaseStatusTurns(unit, STATUS_FREEZE);
-		decreaseStatusTurns(unit, STATUS_STUN);
+		decreaseStatusTurns(unit, BattleConstants.STATUS_FREEZE);
+		decreaseStatusTurns(unit, BattleConstants.STATUS_STUN);
 	}
 
 	private void decreaseStatusTurns(BattleUnit unit, String statusType) { // 상태 이상 턴 수 줄이고, 삭제하는 역할
@@ -640,16 +640,16 @@ public class BattleServiceImpl implements BattleService {
 		List<MonsterDto> dto = monsterMapper.MonsterList(session, type);
 
 		if (WhereStage == 1 || WhereStage == 2 || WhereStage == 3) {
-			int n = CommonUtil.Dice(4);
+			int n = CommonUtil.Dice(BattleConstants.getMonsterStageDice());
 			Enemy.add(dto.get(n));
 		} else if (WhereStage == 4 || WhereStage == 6 || WhereStage == 7) {
-			for (int a = 1; a <= CommonUtil.Dice(2); a++) {
-				int n = CommonUtil.Dice(4);
+			for (int a = 1; a <= CommonUtil.Dice(BattleConstants.getMonsterStageMaxCount()); a++) {
+				int n = CommonUtil.Dice(BattleConstants.getMonsterStageDice());
 				Enemy.add(dto.get(n));
 			}
 		} else if (WhereStage == 8 || WhereStage == 9) {
-			for (int a = 1; a <= 2; a++) {
-				int n = CommonUtil.Dice(4);
+			for (int a = 1; a <= BattleConstants.getMonsterStageFixedCount(); a++) {
+				int n = CommonUtil.Dice(BattleConstants.getMonsterStageDice());
 				Enemy.add(dto.get(n));
 			}
 		} else if (WhereStage == 5 || WhereStage == 10) {
@@ -683,13 +683,13 @@ public class BattleServiceImpl implements BattleService {
 	private boolean hasSummonMaster(BattleSession session) {
 		return session.getEnemy().stream().filter(monster -> monster instanceof BattleMonsterUnit)
 				.map(monster -> (BattleMonsterUnit) monster)
-				.anyMatch(monster -> monster.getID() != null && monster.getID() == SUMMON_MASTER_ID);
+				.anyMatch(monster -> monster.getID() != null && monster.getID() == BattleConstants.getSummonMasterId());
 	}
 
 	private void killAllServants(BattleSession session) {
 		session.getEnemy().stream().filter(monster -> monster instanceof BattleMonsterUnit)
 				.map(monster -> (BattleMonsterUnit) monster)
-				.filter(monster -> monster.getID() != null && monster.getID() == SERVANT_MONSTER_ID)
+				.filter(monster -> monster.getID() != null && monster.getID() == BattleConstants.getSummonMasterId())
 				.forEach(servant -> {
 					servant.setHp(0);
 					servant.setAlive(false);

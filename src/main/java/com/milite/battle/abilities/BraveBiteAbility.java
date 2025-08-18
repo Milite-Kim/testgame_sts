@@ -2,11 +2,10 @@ package com.milite.battle.abilities;
 
 import com.milite.battle.BattleContext;
 import com.milite.battle.BattleUnit;
+import com.milite.constants.BattleConstants;
 import com.milite.util.KoreanUtil;
 
 public class BraveBiteAbility implements SpecialAbility{
-	private static final int REFLECT_DAMAGE = 3;
-	
 	@Override
 	public void onAttack(BattleUnit attacker, BattleUnit target, BattleContext context) {
 
@@ -19,8 +18,8 @@ public class BraveBiteAbility implements SpecialAbility{
 	public void onDefensePerHit(BattleUnit defender, BattleUnit attacker, int damage, BattleContext context) {
 		 System.out.println("BraveBite 발동 " + defender.getName() + " → " + attacker.getName());
 		if(attacker != null && attacker.isAlive()) {
-			context.addReflectDamage(attacker, REFLECT_DAMAGE);
-			  System.out.println("반사 피해 예약 : " + REFLECT_DAMAGE);
+			context.addReflectDamage(attacker, BattleConstants.getBraveBiteReflect());
+			  System.out.println("반사 피해 예약 : " + BattleConstants.getBraveBiteReflect());
 			
 			context.addLogEntry(defender.getName(), "brave_bite", 
 	                defender.getName() + KoreanUtil.getJosa(defender.getName(), "이 ", "가 ") + 
@@ -51,6 +50,6 @@ public class BraveBiteAbility implements SpecialAbility{
 	}
 	
     public int getReflectDamage() {
-        return REFLECT_DAMAGE;
+        return BattleConstants.getBraveBiteReflect();
     }
 }

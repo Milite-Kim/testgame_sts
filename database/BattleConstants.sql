@@ -44,13 +44,13 @@ INSERT INTO Battle_Constants (name, value, type, description) VALUES
 -- 태세 변경 (FormChange)
 ('ability_form_change_offense_atk', 1.3, 'ABILITY', '폼체인지 공격태세 공격력 배수'),
 ('ability_form_change_offense_def', 1.3, 'ABILITY', '폼체인지 공격태세 피해 증가 배수'),
-('ability_form_change_defense_atk', 1.3, 'ABILITY', '폼체인지 방어태세 공격력 감소 배수'),
-('ability_form_change_defense_def', 1.3, 'ABILITY', '폼체인지 방어태세 피해 감소 배수'),
+('ability_form_change_defense_atk', 0.7, 'ABILITY', '폼체인지 방어태세 공격력 감소 배수'),
+('ability_form_change_defense_def', 0.7, 'ABILITY', '폼체인지 방어태세 피해 감소 배수'),
 
 -- 모드 변경 (ModeSwitch)
 ('ability_mode_switch_offense_atk', 1.2, 'ABILITY', '모드스위치 포식모드 공격력 배수'),
-('ability_mode_switch_offense_def', 0.8, 'ABILITY', '모드스위치 포식모드 피해 증가 배수'),
-('ability_mode_switch_defense_atk', 1.2, 'ABILITY', '모드스위치 휴식모드 공격력 감소 배수'),
+('ability_mode_switch_offense_def', 1.2, 'ABILITY', '모드스위치 포식모드 피해 증가 배수'),
+('ability_mode_switch_defense_atk', 0.8, 'ABILITY', '모드스위치 휴식모드 공격력 감소 배수'),
 ('ability_mode_switch_defense_def', 0.8, 'ABILITY', '모드스위치 휴식모드 피해 감소 배수'),
 
 -- 상태이상 부여

@@ -1,14 +1,12 @@
 package com.milite.battle.artifacts;
 
 import com.milite.battle.BattleUnit;
-import static com.milite.constants.BattleConstants.*;
-
+import com.milite.constants.BattleConstants;
 import com.milite.battle.BattleContext;
 
 public class ElementStoneArtifact implements PlayerArtifact {
 	private static final String ARTIFACT_NAME = "원소의 돌";
 	private static final String ARTIFACT_DESCRIPTION = "속성 우세 시 데미지가 1.3배로 증가합니다";
-	private static final double ADVANTAGE_BONUS = 0.1;
 
 	@Override
 	public void onPlayerAttack(BattleUnit attacker, BattleUnit target, BattleContext context) {
@@ -56,12 +54,12 @@ public class ElementStoneArtifact implements PlayerArtifact {
 	}
 
 	public double getElementAdvantageBonus() {
-		return ADVANTAGE_BONUS;
+		return BattleConstants.getElementStoneBonus();
 	}
 
 	public String getEffectDescription(double baseMultiplier) {
 		if (hasElementAdvantage(baseMultiplier)) {
-			double finalMultiplier = baseMultiplier + ADVANTAGE_BONUS;
+			double finalMultiplier = baseMultiplier + BattleConstants.getElementStoneBonus();
 			return String.format("원소의 돌 효과 : %.1f배 -> %.1f배", baseMultiplier, finalMultiplier);
 		}
 		return "우세 상성이 아니기에 원소의 돌 효과가 적용되지 않음";

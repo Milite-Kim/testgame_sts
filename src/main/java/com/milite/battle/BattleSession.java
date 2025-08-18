@@ -4,7 +4,6 @@ import lombok.*;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static com.milite.constants.BattleConstants.*;
 import com.milite.battle.abilities.BlindAbility;
 import com.milite.battle.abilities.FormChangeAbility;
 import com.milite.battle.abilities.ModeSwitchAbility;
@@ -12,6 +11,7 @@ import com.milite.battle.abilities.ThreeChanceAbility;
 import com.milite.battle.abilities.ThreeStackAbility;
 import com.milite.battle.artifacts.ElementStoneArtifact;
 import com.milite.battle.artifacts.PlayerArtifact;
+import com.milite.constants.BattleConstants;
 import com.milite.dto.BattleResultDto;
 import com.milite.dto.PlayerDto;
 import com.milite.dto.SkillDto;
@@ -232,7 +232,7 @@ public class BattleSession {
 	}
 
 	private double calculateElementMultiplier(String attackElement, String targetElement) {
-		return ELEMENT_EFFECTIVENESS.get(attackElement).get(targetElement);
+		return BattleConstants.getElementMultiplier(attackElement, targetElement);
 	}
 
 	private double calculateFinalElementMultiplier(PlayerDto player, String attackElement, String targetElement) {
@@ -356,16 +356,16 @@ public class BattleSession {
 	}
 
 	private boolean isAttacked(int luck, BattleUnit attacker, BattleUnit target) {
-		int n = CommonUtil.Dice(BASE_DODGE_ROLL);
-		int dodgeChance = n * DODGE_MULTIPLIER + luck;
+		int n = CommonUtil.Dice(BattleConstants.getBaseDodgeRoll());
+		int dodgeChance = n * BattleConstants.getDodgeMultiplier() + luck;
 
 		if (attacker != null && attacker.getUnitType().equals("Player")) {
 			if (BlindAbility.isBlind(attacker)) {
-				dodgeChance += BlindAbility.getBlindDodgeBonus();
+				dodgeChance += BattleConstants.getBlindDodgeBonus();
 			}
 		}
 
-		int roll = (int) (Math.random() * 100) + 1;
+		int roll = (int) (Math.random() * BattleConstants.getBattleHitRollMax()) + 1;
 		return roll > dodgeChance;
 	}
 
@@ -374,7 +374,7 @@ public class BattleSession {
 		int calc = 0;
 
 		int dmg_range = (int) (Math.random() * (skill.getMax_damage() - skill.getMin_damage())) + skill.getMin_damage();
-		calc = calc + (int) (dmg_range + Math.floor(atk / 5));
+		calc = calc + (int) (dmg_range + Math.floor(atk / BattleConstants.getBattleAtkDivisor()));
 
 		return calc;
 	}
