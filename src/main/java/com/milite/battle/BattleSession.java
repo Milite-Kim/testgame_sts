@@ -4,13 +4,8 @@ import lombok.*;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import com.milite.battle.abilities.BlindAbility;
-import com.milite.battle.abilities.FormChangeAbility;
-import com.milite.battle.abilities.ModeSwitchAbility;
-import com.milite.battle.abilities.ThreeChanceAbility;
-import com.milite.battle.abilities.ThreeStackAbility;
-import com.milite.battle.artifacts.ElementStoneArtifact;
-import com.milite.battle.artifacts.PlayerArtifact;
+import com.milite.battle.abilities.*;
+import com.milite.battle.artifacts.*;
 import com.milite.constants.BattleConstants;
 import com.milite.dto.BattleResultDto;
 import com.milite.dto.PlayerDto;
@@ -119,7 +114,9 @@ public class BattleSession {
 		int targetLuck = getTargetLuck(target);
 		boolean isHit = isAttacked(targetLuck);
 
-		if (attacker.getUnitType().equals("Player")) {
+		boolean isPlayer = attacker.getUnitType().equals("Player");
+
+		if (isPlayer) {
 			PlayerDto player = (PlayerDto) attacker;
 			player.executeArtifactsOnAttack(target, context);
 		}
@@ -127,8 +124,14 @@ public class BattleSession {
 		if (isHit) {
 			int baseDamage = calcAtk(attackerAtk, skill);
 
+			int artifactBonusDamage = 0;
+			if (isPlayer) {
+				PlayerDto player = (PlayerDto) attacker;
+				artifactBonusDamage = getArtifactBonusDamage(player, skill);
+			}
+
 			double elementMultiplier;
-			if (attacker.getUnitType().equals("Player")) {
+			if (isPlayer) {
 				PlayerDto player = (PlayerDto) attacker;
 				elementMultiplier = calculateFinalElementMultiplier(player, skill.getElement(),
 						getTargetElement(target));
@@ -136,7 +139,7 @@ public class BattleSession {
 				elementMultiplier = calculateElementMultiplier(skill.getElement(), getTargetElement(target));
 			}
 
-			int finalDamage = (int) (baseDamage * elementMultiplier);
+			int finalDamage = (int) ((baseDamage + artifactBonusDamage) * elementMultiplier);
 
 			String damageMessage = buildDamageMessage(actor, actorJosa, target.getName(), finalDamage,
 					elementMultiplier);
@@ -148,7 +151,7 @@ public class BattleSession {
 			battleState.addDamage(finalDamage);
 			battleState.setAnyHit(true);
 
-			if (attacker.getUnitType().equals("Player")) {
+			if (isPlayer) {
 				PlayerDto player = (PlayerDto) attacker;
 				player.executeArtifactsOnHit(target, finalDamage, context);
 			}
@@ -260,16 +263,33 @@ public class BattleSession {
 		return "None";
 	}
 
+	private int getArtifactBonusDamage(PlayerDto player, SkillDto skill) {
+		int totalBonusDamage = 0;
+		String skillElement = skill.getElement();
+
+		for (PlayerArtifact artifact : player.getArtifacts()) {
+			if (artifact instanceof FighterGuildMedalArtifact) {
+				FighterGuildMedalArtifact medal = (FighterGuildMedalArtifact) artifact;
+				totalBonusDamage += medal.calculateDamageBonus(skillElement);
+			} else if (artifact instanceof BurningLavaStoneArtifact) {
+				BurningLavaStoneArtifact stone = (BurningLavaStoneArtifact) artifact;
+				totalBonusDamage += stone.calculateDamageBonus(skillElement);
+			} else if (artifact instanceof BlueTridentArtifact) {
+				BlueTridentArtifact trident = (BlueTridentArtifact) artifact;
+				totalBonusDamage += trident.calculateDamageBonus(skillElement);
+			} else if (artifact instanceof DruidBeltArtifact) {
+				DruidBeltArtifact belt = (DruidBeltArtifact) artifact;
+				totalBonusDamage += belt.calculateDamageBonus(skillElement);
+			} //추가로 데미지 추가형 아티팩트를 넣을 때 여기에 넣을 것
+		}
+
+		return totalBonusDamage;
+	}
+
 	private String buildDamageMessage(String actor, String actorJosa, String targetName, int damage,
 			double multiplier) {
 
 		String baseMessage = actor + actorJosa + targetName + "에게 " + damage + "의 피해를 입혔습니다.";
-
-		/*
-		 * if (multiplier > 1.0 ) {
-		 * 
-		 * }else if(multiplier < 1.0) { }
-		 */ // 약점 공격 성공 여부에 따라 메세지 출력 하고 싶다면 여기에 작성
 
 		return baseMessage;
 	}

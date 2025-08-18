@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 import com.milite.battle.*;
 import com.milite.battle.abilities.ImmunAbility;
 import com.milite.battle.abilities.SummonAbility;
+import com.milite.battle.artifacts.*;
 import com.milite.dto.BattleResultDto;
 import com.milite.dto.MonsterDto;
 import com.milite.dto.PlayerDto;
@@ -412,7 +413,8 @@ public class BattleServiceImpl implements BattleService {
 		}
 
 		if (statusMap.containsKey(BattleConstants.STATUS_BURN) && statusMap.get(BattleConstants.STATUS_BURN) > 0) {
-			context.damageUnit(unit, BattleConstants.getBurnDamage());
+			int burnDamage = calculateBurnDamage(unit);
+			context.damageUnit(unit, burnDamage);
 			decreaseStatusTurns(unit, BattleConstants.STATUS_BURN);
 		}
 
@@ -431,6 +433,23 @@ public class BattleServiceImpl implements BattleService {
 		}
 
 		logs.addAll(context.getLogs());
+	}
+
+	private int calculateBurnDamage(BattleUnit unit) {
+		int baseBurnDamage = BattleConstants.getBurnDamage();
+
+		if (unit.getUnitType().equals("Player")) {
+			PlayerDto player = (PlayerDto) unit;
+
+			for (PlayerArtifact artifact : player.getArtifacts()) {
+				if (artifact instanceof DryWoodArtifact) {
+					DryWoodArtifact dryWood = (DryWoodArtifact) artifact;
+					baseBurnDamage += dryWood.getBurnDamageBonus();
+				}
+			}
+		}
+
+		return baseBurnDamage;
 	}
 
 	private void applySkillStatusEffects(SkillDto skill, List<BattleUnit> allUnits, Integer targetIndex,
