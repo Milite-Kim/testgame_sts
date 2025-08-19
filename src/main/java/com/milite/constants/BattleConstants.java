@@ -169,6 +169,30 @@ public class BattleConstants {
 	public static int getDryWoodBurnBonus() {
 		return service.getIntConstant("artifact_dry_wood_burn_bonus");
 	}
+
+	public static int getBlurryLensHitBonus() {
+		return service.getIntConstant("artifact_blurry_lens_hit");
+	}
+	
+	public static int getGrayCloakDodgeBonus() {
+		return service.getIntConstant("artifact_gray_cloak_dodge");
+	}
+	
+	public static int getDeapsPearlHealAmount() {
+		return service.getIntConstant("artifact_deeps_pearl_heal_on_hit");
+	}
+	
+	public static int getBlackCoralHealAmount() {
+		return service.getIntConstant("artifact_black_coral_heal_on_attack");
+	}
+	
+	public static int getSeaHeartHealAmount() {
+		return service.getIntConstant("artifact_sea_heart_heal_per_turn");
+	}
+	
+	public static double getPoisonNeedleRatio() {
+		return service.getConstant("artifact_poison_needle_stack_ratio");
+	}
 	
 	// ========== 몬스터 생성 상수들 ==========
 	public static int getMonsterStageDice() {

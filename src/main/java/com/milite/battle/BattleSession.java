@@ -280,7 +280,7 @@ public class BattleSession {
 			} else if (artifact instanceof DruidBeltArtifact) {
 				DruidBeltArtifact belt = (DruidBeltArtifact) artifact;
 				totalBonusDamage += belt.calculateDamageBonus(skillElement);
-			} //추가로 데미지 추가형 아티팩트를 넣을 때 여기에 넣을 것
+			} // 추가로 데미지 추가형 아티팩트를 넣을 때 여기에 넣을 것
 		}
 
 		return totalBonusDamage;
@@ -380,13 +380,50 @@ public class BattleSession {
 		int dodgeChance = n * BattleConstants.getDodgeMultiplier() + luck;
 
 		if (attacker != null && attacker.getUnitType().equals("Player")) {
+			PlayerDto player = (PlayerDto) attacker;
 			if (BlindAbility.isBlind(attacker)) {
 				dodgeChance += BattleConstants.getBlindDodgeBonus();
 			}
+
+			int hitRateBonus = calculatePlayerHitRateBonus(player);
+
+			dodgeChance -= hitRateBonus;
+		}
+
+		if (target != null && target.getUnitType().equals("Player")) {
+			PlayerDto player = (PlayerDto) target;
+
+			int DodgeRateBonus = calculatePlayerDodgeRateBonus(player);
+
+			dodgeChance += DodgeRateBonus;
 		}
 
 		int roll = (int) (Math.random() * BattleConstants.getBattleHitRollMax()) + 1;
 		return roll > dodgeChance;
+	}
+
+	private int calculatePlayerHitRateBonus(PlayerDto player) {
+		int totalHitBonus = 0;
+
+		for (PlayerArtifact artifact : player.getArtifacts()) {
+			if (artifact instanceof BlurryLensArtifact) {
+				BlurryLensArtifact lens = (BlurryLensArtifact) artifact;
+				totalHitBonus += lens.getHitBonus();
+			}
+		}
+		return totalHitBonus;
+	}
+
+	private int calculatePlayerDodgeRateBonus(PlayerDto player) {
+		int totalDodgeBonus = 0;
+
+		for (PlayerArtifact artifact : player.getArtifacts()) {
+			if (artifact instanceof GrayCloakArtifact) {
+				GrayCloakArtifact cloak = (GrayCloakArtifact) artifact;
+				totalDodgeBonus += cloak.getDodgeBonus();
+			}
+		}
+		return totalDodgeBonus;
 	}
 
 	private int calcAtk(int atk, SkillDto skill) {

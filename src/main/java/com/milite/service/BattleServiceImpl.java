@@ -419,7 +419,7 @@ public class BattleServiceImpl implements BattleService {
 		}
 
 		if (statusMap.containsKey(BattleConstants.STATUS_POISON) && statusMap.get(BattleConstants.STATUS_POISON) > 0) {
-			int poisonDamage = statusMap.get(BattleConstants.STATUS_POISON);
+			int poisonDamage = calculatePoisonDamage(unit);
 			context.damageUnit(unit, poisonDamage);
 			decreaseStatusTurns(unit, BattleConstants.STATUS_POISON);
 		}
@@ -450,6 +450,12 @@ public class BattleServiceImpl implements BattleService {
 		}
 
 		return baseBurnDamage;
+	}
+
+	private int calculatePoisonDamage(BattleUnit unit) {
+		Map<String, Integer> statusMap = unit.getStatusEffects();
+		int basePoisonDamage = statusMap.get(BattleConstants.STATUS_POISON);
+		return basePoisonDamage;
 	}
 
 	private void applySkillStatusEffects(SkillDto skill, List<BattleUnit> allUnits, Integer targetIndex,

@@ -83,12 +83,12 @@ INSERT INTO Battle_Constants (name, value, type, description) VALUES
 
 -- 방어/회피 관련 아티팩트
 ('artifact_broken_blade_reflect', 2, 'ARTIFACT', '부서진 칼날 - 피격 시 반사 데미지'),
-('artifact_gray_cloak_dodge', 0.05, 'ARTIFACT', '회색 망토 - 회피율 증가 (5%)'),
-('artifact_blurry_lens_hit', 0.05, 'ARTIFACT', '흐릿한 렌즈 - 적 회피율 감소 (5%)'),
+('artifact_gray_cloak_dodge', 5, 'ARTIFACT', '회색 망토 - 회피율 증가 (5%)'),
+('artifact_blurry_lens_hit', 5, 'ARTIFACT', '흐릿한 렌즈 - 적 회피율 감소 (5%)'),
 
 -- 회복 관련 아티팩트
 ('artifact_sea_heart_heal_per_turn', 5, 'ARTIFACT', '바다의 심장 - 매턴 회복량'),
-('artifact_deep_pearl_heal_on_hit', 2, 'ARTIFACT', '심해의 진주 - 공격 명중 시 회복량'),
+('artifact_deeps_pearl_heal_on_hit', 2, 'ARTIFACT', '심해의 진주 - 공격 명중 시 회복량'),
 ('artifact_black_coral_heal_on_attack', 3, 'ARTIFACT', '검은 산고 - 공격 시 회복량'),
 
 -- 특수 효과 아티팩트
