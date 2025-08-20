@@ -217,6 +217,29 @@ public class BattleContext {
 		return delayedActions.size();
 	}
 
+	public void processAllStatusEffects(BattleUnit unit) {
+		Map<String, Integer> statusMap = unit.getStatusEffects();
+		if (statusMap == null || statusMap.isEmpty()) {
+			return;
+		}
+
+		if (statusMap.containsKey(BattleConstants.STATUS_BURN) && statusMap.get(BattleConstants.STATUS_BURN) > 0) {
+			int burnDamage = calculateBurnDamage(unit);
+			applyStatusDamage(unit, BattleConstants.STATUS_BURN, burnDamage);
+			decreaseStatusTurns(unit, BattleConstants.STATUS_BURN);
+		}
+
+		if (statusMap.containsKey(BattleConstants.STATUS_POISON) && statusMap.get(BattleConstants.STATUS_POISON) > 0) {
+			int poisonDamage = statusMap.get(BattleConstants.STATUS_POISON);
+			applyStatusDamage(unit, BattleConstants.STATUS_POISON, poisonDamage);
+			decreaseStatusTurns(unit, BattleConstants.STATUS_POISON);
+		}
+
+	    decreaseStatusTurns(unit, BattleConstants.STATUS_BLIND);
+	    decreaseStatusTurns(unit, BattleConstants.STATUS_FREEZE);
+	    decreaseStatusTurns(unit, BattleConstants.STATUS_STUN);
+	}
+
 	public void decreaseStatusTurns(BattleUnit unit, String statusType) {
 		Map<String, Integer> statusMap = unit.getStatusEffects();
 		if (statusMap == null) {
@@ -237,14 +260,14 @@ public class BattleContext {
 	}
 
 	public void applyStatusDamage(BattleUnit unit, String statusType, int damage) {
-	    if (damage > 0) {
-	        damageUnit(unit, damage);
-	        addLogEntry(unit.getName(), statusType + "_damage",
-	            unit.getName() + KoreanUtil.getJosa(unit.getName(), "이 ", "가 ") + 
-	            getStatusName(statusType) + "으로 " + damage + "의 피해를 받았습니다.");
-	    }
+		if (damage > 0) {
+			damageUnit(unit, damage);
+			addLogEntry(unit.getName(), statusType + "_damage",
+					unit.getName() + KoreanUtil.getJosa(unit.getName(), "이 ", "가 ") + getStatusName(statusType) + "으로 "
+							+ damage + "의 피해를 받았습니다.");
+		}
 	}
-	
+
 	public int calculateBurnDamage(BattleUnit unit) {
 		int baseBurnDamage = BattleConstants.getBurnDamage();
 

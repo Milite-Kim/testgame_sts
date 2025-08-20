@@ -9,7 +9,6 @@ import org.springframework.stereotype.Service;
 import com.milite.battle.*;
 import com.milite.battle.abilities.ImmunAbility;
 import com.milite.battle.abilities.SummonAbility;
-import com.milite.battle.artifacts.*;
 import com.milite.dto.BattleResultDto;
 import com.milite.dto.MonsterDto;
 import com.milite.dto.PlayerDto;
@@ -172,19 +171,25 @@ public class BattleServiceImpl implements BattleService {
 
 		// 추후 플레이어의 턴 시작 특수 효과가 들어간다면 여기
 
-		processStatusEffectsAtActionStart(player, actionLogs, session.getCurrentTurn(), context); // 행동 전의 상태 이상 처리
+		context.processAllStatusEffects(player); // 행동 전의 상태 이상 처리
 
 		if (isUnitDisabled(player)) {
 			String statusName = getDisableStatusName(player);
 			log.info("플레이어가 " + statusName + " 상태로 행동 불가");
 
-			decreaseDisableStatusTurns(player);
+			if (BattleConstants.STATUS_FREEZE.equals(statusName)) {
+				context.decreaseStatusTurns(player, BattleConstants.STATUS_FREEZE);
+			} else if (BattleConstants.STATUS_STUN.equals(statusName)) {
+				context.decreaseStatusTurns(player, BattleConstants.STATUS_STUN);
+			}
+
 			actionLogs.add(new BattleLogEntry(player.getName(), "disabled", player.getName()
 					+ KoreanUtil.getJosa(player.getName(), "이 ", "가 ") + statusName + " 상태로 행동할 수 없습니다.",
 					session.getCurrentTurn()));
 
 			moveToNextAction(session);
 			allLogs.addAll(actionLogs);
+			allLogs.addAll(context.getLogs());
 			return new BattleResultDto(statusName + " 상태로 행동 불가", 0, 0, false, false, actionLogs);
 		}
 
@@ -193,6 +198,7 @@ public class BattleServiceImpl implements BattleService {
 					new BattleLogEntry(player.getName(), "skip", "스킬 정보가 없어서 액션을 넘깁니다.", session.getCurrentTurn()));
 			moveToNextAction(session);
 			allLogs.addAll(actionLogs);
+			allLogs.addAll(context.getLogs());
 			return new BattleResultDto("스킬 정보 없음으로 액션 스킵", 0, 0, false, false, actionLogs);
 		}
 
@@ -233,11 +239,17 @@ public class BattleServiceImpl implements BattleService {
 			((BattleMonsterUnit) monster).executeOnTurnStart(context);
 		}
 
-		processStatusEffectsAtActionStart(monster, actionLogs, session.getCurrentTurn(), context);
+		context.processAllStatusEffects(monster);
 
 		if (isUnitDisabled(monster)) {
 			String statusName = getDisableStatusName(monster);
-			decreaseDisableStatusTurns(monster);
+
+			if (BattleConstants.STATUS_FREEZE.equals(statusName)) {
+				context.decreaseStatusTurns(monster, BattleConstants.STATUS_FREEZE);
+			} else if (BattleConstants.STATUS_STUN.equals(statusName)) {
+				context.decreaseStatusTurns(monster, BattleConstants.STATUS_STUN);
+			}
+			
 			actionLogs.add(new BattleLogEntry(monster.getName(), "disabled",
 					monster.getName() + KoreanUtil.getJosa(monster.getName(), "이 ", "가 ") + statusName + " 상태로 행동 불가",
 					session.getCurrentTurn()));
@@ -404,60 +416,6 @@ public class BattleServiceImpl implements BattleService {
 		return Enemy(session, WhereStage);
 	}
 
-	// 상태이상 처리용
-	private void processStatusEffectsAtActionStart(BattleUnit unit, List<BattleLogEntry> logs, int currentTurn,
-			BattleContext context) {
-		Map<String, Integer> statusMap = unit.getStatusEffects();
-		if (statusMap == null || statusMap.isEmpty()) {
-			return;
-		}
-
-		if (statusMap.containsKey(BattleConstants.STATUS_BURN) && statusMap.get(BattleConstants.STATUS_BURN) > 0) {
-			int burnDamage = calculateBurnDamage(unit);
-			context.damageUnit(unit, burnDamage);
-			decreaseStatusTurns(unit, BattleConstants.STATUS_BURN);
-		}
-
-		if (statusMap.containsKey(BattleConstants.STATUS_POISON) && statusMap.get(BattleConstants.STATUS_POISON) > 0) {
-			int poisonDamage = calculatePoisonDamage(unit);
-			context.damageUnit(unit, poisonDamage);
-			decreaseStatusTurns(unit, BattleConstants.STATUS_POISON);
-		}
-
-		if (statusMap.containsKey(BattleConstants.STATUS_BLIND) && statusMap.get(BattleConstants.STATUS_BLIND) > 0) {
-			decreaseStatusTurns(unit, BattleConstants.STATUS_BLIND);
-			if (statusMap.getOrDefault(BattleConstants.STATUS_BLIND, 0) <= 0) {
-				context.addLogEntry(unit.getName(), "status_clear",
-						unit.getName() + KoreanUtil.getJosa(unit.getName(), "의 ", "의 ") + "실명이 해제되었습니다.");
-			}
-		}
-
-		logs.addAll(context.getLogs());
-	}
-
-	private int calculateBurnDamage(BattleUnit unit) {
-		int baseBurnDamage = BattleConstants.getBurnDamage();
-
-		if (unit.getUnitType().equals("Player")) {
-			PlayerDto player = (PlayerDto) unit;
-
-			for (PlayerArtifact artifact : player.getArtifacts()) {
-				if (artifact instanceof DryWoodArtifact) {
-					DryWoodArtifact dryWood = (DryWoodArtifact) artifact;
-					baseBurnDamage += dryWood.getBurnDamageBonus();
-				}
-			}
-		}
-
-		return baseBurnDamage;
-	}
-
-	private int calculatePoisonDamage(BattleUnit unit) {
-		Map<String, Integer> statusMap = unit.getStatusEffects();
-		int basePoisonDamage = statusMap.get(BattleConstants.STATUS_POISON);
-		return basePoisonDamage;
-	}
-
 	private void applySkillStatusEffects(SkillDto skill, List<BattleUnit> allUnits, Integer targetIndex,
 			BattleContext context) {
 		String element = skill.getElement();
@@ -557,28 +515,6 @@ public class BattleServiceImpl implements BattleService {
 			return "기절";
 		}
 		return "";
-	}
-
-	private void decreaseDisableStatusTurns(BattleUnit unit) { // 행동 불가 시 해당 상태 턴 수 줄이기 위함
-		decreaseStatusTurns(unit, BattleConstants.STATUS_FREEZE);
-		decreaseStatusTurns(unit, BattleConstants.STATUS_STUN);
-	}
-
-	private void decreaseStatusTurns(BattleUnit unit, String statusType) { // 상태 이상 턴 수 줄이고, 삭제하는 역할
-		Map<String, Integer> statusMap = unit.getStatusEffects();
-		if (statusMap == null) {
-			return;
-		}
-
-		int currentTurns = statusMap.getOrDefault(statusType, 0);
-		if (currentTurns > 0) {
-			currentTurns--;
-			if (currentTurns <= 0) {
-				statusMap.remove(statusType);
-			} else {
-				statusMap.put(statusType, currentTurns);
-			}
-		}
 	}
 
 	private List<BattleUnit> createActionOrder(PlayerDto player, ArrayList<BattleMonsterUnit> enemy) {
