@@ -2,16 +2,22 @@ package com.milite.battle.artifacts;
 
 import com.milite.battle.BattleContext;
 import com.milite.battle.BattleUnit;
-import com.milite.constants.BattleConstants;
 import com.milite.util.KoreanUtil;
 
-public class BrokenBladeArtifact implements PlayerArtifact {
-	private static final String ARTIFACT_NAME = "부서진 칼날";
-	private static final String ARTIFACT_DESCRIPTION = "피격 시, 2 피해 반사";
+public class OverloadCrystalArtifact implements PlayerArtifact {
+	private static final String ARTIFACT_NAME = "과부하 결정";
+	private static final String ARTIFACT_DESCRIPTION = "첫 턴에 하는 공격이 확정 명중";
+
+	private boolean isUsed = false;
 
 	@Override
 	public void onPlayerAttack(BattleUnit attacker, BattleUnit target, BattleContext context) {
+		if (!isUsed) {
+			isUsed = true;
 
+			context.addLogEntry(attacker.getName(), "overload_crystal_effect", attacker.getName()
+					+ KoreanUtil.getJosa(attacker.getName(), "의 ", "의 ") + ARTIFACT_NAME + "이 밝게 빛나며 확정 명중을 보장합니다!");
+		}
 	}
 
 	@Override
@@ -21,15 +27,7 @@ public class BrokenBladeArtifact implements PlayerArtifact {
 
 	@Override
 	public void onPlayerDefensePerHit(BattleUnit defender, BattleUnit attacker, int damage, BattleContext context) {
-		if (attacker != null && attacker.isAlive()) {
-			context.addReflectDamage(attacker, BattleConstants.getBrokenBladeReflectDamage());
-			System.out.println("반사 피해 예약 : " + BattleConstants.getBrokenBladeReflectDamage());
 
-			context.addLogEntry(defender.getName(), "Broken_Blade", defender.getName()
-					+ KoreanUtil.getJosa(defender.getName(), "의 ", "의 ") + ARTIFACT_NAME + "이 날카롭게 빛을 냅니다.");
-		} else {
-			System.out.println("BrokenBlade 발동 실패 : 공격자가 없거나 사망");
-		}
 	}
 
 	@Override
@@ -56,5 +54,25 @@ public class BrokenBladeArtifact implements PlayerArtifact {
 	@Override
 	public String getArtifactDescription() {
 		return ARTIFACT_DESCRIPTION;
+	}
+
+	public boolean canUse() {
+		return !isUsed;
+	}
+
+	public void useEffect() {
+		this.isUsed = true;
+	}
+
+	public boolean hasUsedEffect() {
+		return isUsed;
+	}
+
+	public String getStatusDescription() {
+		if (isUsed) {
+			return "과부하 결정: 효과 사용됨";
+		} else {
+			return "과부하 결정: 다음 공격 확정 명중 준비됨";
+		}
 	}
 }

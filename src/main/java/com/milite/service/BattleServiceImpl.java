@@ -7,16 +7,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.milite.battle.*;
-import com.milite.battle.abilities.ImmunAbility;
-import com.milite.battle.abilities.SummonAbility;
-import com.milite.dto.BattleResultDto;
-import com.milite.dto.MonsterDto;
-import com.milite.dto.PlayerDto;
-import com.milite.dto.SkillDto;
+import com.milite.battle.abilities.*;
+import com.milite.battle.artifacts.*;
+import com.milite.dto.*;
 import com.milite.mapper.CharacterStatusMapper;
 import com.milite.mapper.MonsterMapper;
-import com.milite.util.CommonUtil;
-import com.milite.util.KoreanUtil;
+import com.milite.util.*;
 import com.milite.constants.BattleConstants;
 
 import lombok.Setter;
@@ -249,7 +245,7 @@ public class BattleServiceImpl implements BattleService {
 			} else if (BattleConstants.STATUS_STUN.equals(statusName)) {
 				context.decreaseStatusTurns(monster, BattleConstants.STATUS_STUN);
 			}
-			
+
 			actionLogs.add(new BattleLogEntry(monster.getName(), "disabled",
 					monster.getName() + KoreanUtil.getJosa(monster.getName(), "이 ", "가 ") + statusName + " 상태로 행동 불가",
 					session.getCurrentTurn()));
@@ -438,10 +434,25 @@ public class BattleServiceImpl implements BattleService {
 		}
 
 		String statusType = skill.getStatusEffectName();
-
 		if (statusType != null) {
+			int finalTurns = effectTurns;
+
+			if (BattleConstants.STATUS_STUN.equals(statusType) && context.getSession().getPlayer() != null) {
+				PlayerDto player = context.getSession().getPlayer();
+				for (PlayerArtifact artifact : player.getArtifacts()) {
+					if (artifact instanceof DarkHammerArtifact) {
+						DarkHammerArtifact hammer = (DarkHammerArtifact) artifact;
+						finalTurns = hammer.calculateStunTurns(finalTurns);
+
+						context.addLogEntry(player.getName(), "dark_hammer_effect",
+								hammer.getEffectDescription(effectTurns));
+						break;
+					}
+				}
+			}
+
 			log.info(statusType + " (확률: " + effectRate + "%, 지속: " + effectTurns + "턴)");
-			applyStatusEffectToTargets(skill.getTarget(), allUnits, targetIndex, statusType, effectTurns, context);
+			applyStatusEffectToTargets(skill.getTarget(), allUnits, targetIndex, statusType, finalTurns, context);
 		}
 	}
 

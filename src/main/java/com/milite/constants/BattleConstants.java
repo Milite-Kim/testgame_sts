@@ -194,6 +194,30 @@ public class BattleConstants {
 		return service.getConstant("artifact_poison_needle_stack_ratio");
 	}
 	
+	public static int getBrokenBladeReflectDamage() {
+		return service.getIntConstant("artifact_broken_blade_reflect");
+	}
+	
+	public static int getDarkHammerStunBonus(){
+		return service.getIntConstant("artifact_dark_hammer_stun_bonus");
+	}
+	
+	public static double getMagicianAmuletBonus(){
+		return service.getConstant("artifact_magic_amulet_bonus");
+	}
+	public static double getForbiddenScrollBonus() {
+		return service.getConstant("artifact_forbidden_scroll_advantage");
+	}
+	public static double getForbiddenScrollMinus() {
+		return service.getConstant("artifact_forbidden_scroll_disadvantage");
+	}
+	public static int getShadowDeviceBonus() {
+		return service.getIntConstant("artifact_shadow_device_extra_attack");
+	}
+	public static double getPhoenixFeatherHpRate() {
+		return service.getConstant("artifact_phoenix_feather_revival_hp");
+	}
+	
 	// ========== 몬스터 생성 상수들 ==========
 	public static int getMonsterStageDice() {
 		return service.getIntConstant("monster_stage_1_3_dice");

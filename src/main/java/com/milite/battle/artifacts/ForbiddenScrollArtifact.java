@@ -1,12 +1,12 @@
 package com.milite.battle.artifacts;
 
+import com.milite.battle.BattleContext;
 import com.milite.battle.BattleUnit;
 import com.milite.constants.BattleConstants;
-import com.milite.battle.BattleContext;
 
-public class ElementStoneArtifact implements PlayerArtifact {
-	private static final String ARTIFACT_NAME = "원소의 돌";
-	private static final String ARTIFACT_DESCRIPTION = "우세 상성 공격 시, 배율이 10% 증가";
+public class ForbiddenScrollArtifact implements PlayerArtifact {
+	private static final String ARTIFACT_NAME = "금단의 주문서";
+	private static final String ARTIFACT_DESCRIPTION = "우세 상성 공격 시, 배율 20% 증가 및 약세 상성 공격 시, 배율 20% 감소";
 
 	@Override
 	public void onPlayerAttack(BattleUnit attacker, BattleUnit target, BattleContext context) {
@@ -53,15 +53,27 @@ public class ElementStoneArtifact implements PlayerArtifact {
 		return baseMultiplier > 1.0;
 	}
 
+	public boolean hasElementDisadvantage(double baseMultiplier) {
+		return baseMultiplier < 1.0;
+	}
+
 	public double getElementAdvantageBonus() {
-		return BattleConstants.getElementStoneBonus();
+		return BattleConstants.getForbiddenScrollBonus();
+	}
+
+	public double getElementDisadvantageBonus() {
+		return BattleConstants.getForbiddenScrollMinus();
 	}
 
 	public String getEffectDescription(double baseMultiplier) {
 		if (hasElementAdvantage(baseMultiplier)) {
-			double finalMultiplier = baseMultiplier + BattleConstants.getElementStoneBonus();
-			return String.format("원소의 돌 효과 : %.1f배 -> %.1f배", baseMultiplier, finalMultiplier);
+			double finalMultiplier = baseMultiplier + getElementAdvantageBonus();
+			return String.format("금단의 주문서 효과(우세): %.1f배 → %.1f배로 증가", baseMultiplier, finalMultiplier);
+		} else if (hasElementDisadvantage(baseMultiplier)) {
+			double finalMultiplier = baseMultiplier - getElementDisadvantageBonus();
+			return String.format("금단의 주문서 효과(약세): %.1f배 → %.1f배로 감소", baseMultiplier, finalMultiplier);
 		}
-		return "우세 상성이 아니기에 원소의 돌 효과가 적용되지 않음";
+		return "동등 상성이므로 금단의 주문서 효과가 적용되지 않음";
 	}
+
 }

@@ -45,7 +45,9 @@ public class BattleSession {
 		int attackerAtk = getAttackPower(attacker);
 		// 공격자의 공격력 받아오기
 
-		for (int hitCount = 0; hitCount < skill.getHit_time(); hitCount++) {
+		int totalHitTimes= skill.getHit_time() + getPlayerExtraHitTimes(player);
+		
+		for (int hitCount = 0; hitCount < totalHitTimes; hitCount++) {
 			executeAttackByType(skill.getTarget(), validTargets, targetIndex, attacker, skill, attackerAtk, actor,
 					actorJosa, battleState, context);
 		}
@@ -72,7 +74,7 @@ public class BattleSession {
 	}
 
 	public BattleResultDto battleTurn(BattleUnit attacker, List<BattleUnit> allUnits, BattleContext context) {
-		// 몬스터가 하는 공격 처리
+		// 몬스터가 하는 공격 처리, 현재 턴 전체 흐름 관리가 processMonsterAttack에 위임되어있음. 추후 수정 필요(todo)
 		BattleUnit player = getAlivePlayer(allUnits);
 		if (player == null) {
 			return new BattleResultDto("공격 대상 없음", 0, 0, false, true, new ArrayList<>());
@@ -173,6 +175,7 @@ public class BattleSession {
 	}
 
 	private BattleResultDto processMonsterAttack(BattleUnit attacker, BattleUnit target, BattleContext context) {
+		// 턴 흐름 관리를 추후에 BattleTurn으로 이관해야함
 		BattleMonsterUnit monster = (BattleMonsterUnit) attacker;
 		String actor = attacker.getName();
 		String actorJosa = KoreanUtil.getJosa(actor, "이 ", "가 ");
@@ -250,7 +253,22 @@ public class BattleSession {
 				}
 			}
 
-			// 나중에 동일 역할을 하는 아티팩트가 있다면 여기에 추가
+			if (artifact instanceof MagicianAmuletArtifact) {
+				MagicianAmuletArtifact amulet = (MagicianAmuletArtifact) artifact;
+				if (amulet.hasElementDisadvantage(baseMultiplier)) {
+					totalBonus += amulet.getElementDisadvantageBonus();
+				}
+			}
+
+			if (artifact instanceof ForbiddenScrollArtifact) {
+				ForbiddenScrollArtifact scroll = (ForbiddenScrollArtifact) artifact;
+				if (scroll.hasElementAdvantage(baseMultiplier)) {
+					totalBonus += scroll.getElementAdvantageBonus();
+				}
+				if (scroll.hasElementDisadvantage(baseMultiplier)) {
+					totalBonus -= scroll.getElementDisadvantageBonus();
+				}
+			}
 		}
 
 		return baseMultiplier + totalBonus;
@@ -334,6 +352,18 @@ public class BattleSession {
 		return finalDamage;
 	}
 
+	private int getPlayerExtraHitTimes(PlayerDto player) {
+		int extra = 0;
+	
+		for (PlayerArtifact artifact : player.getArtifacts()) {
+			if (artifact instanceof ShadowDeviceArtifact) {
+				ShadowDeviceArtifact device = (ShadowDeviceArtifact) artifact;
+				extra += device.getHitTimeBonus();
+			}
+		}
+		return extra;
+	}
+	
 	private int getMonsterAttackTimes(BattleMonsterUnit monster) {
 		// 몬스터의 공격횟수 불러오기(이 부분은 나중을 생각해서 미리 작성함)
 		String special = monster.getSpecial();
@@ -376,11 +406,25 @@ public class BattleSession {
 	}
 
 	private boolean isAttacked(int luck, BattleUnit attacker, BattleUnit target) {
+		if (attacker != null && attacker.getUnitType().equals("Player")) {
+			PlayerDto player = (PlayerDto) attacker;
+			for (PlayerArtifact artifact : player.getArtifacts()) {
+				if (artifact instanceof OverloadCrystalArtifact) {
+					OverloadCrystalArtifact crystal = (OverloadCrystalArtifact) artifact;
+					if (crystal.canUse()) {
+						crystal.useEffect();
+						return true;
+					}
+				}
+			}
+		}
+
 		int n = CommonUtil.Dice(BattleConstants.getBaseDodgeRoll());
 		int dodgeChance = n * BattleConstants.getDodgeMultiplier() + luck;
 
 		if (attacker != null && attacker.getUnitType().equals("Player")) {
 			PlayerDto player = (PlayerDto) attacker;
+
 			if (BlindAbility.isBlind(attacker)) {
 				dodgeChance += BattleConstants.getBlindDodgeBonus();
 			}

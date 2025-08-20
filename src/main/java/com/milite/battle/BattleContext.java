@@ -4,9 +4,7 @@ import java.util.*;
 
 import com.milite.battle.abilities.FormChangeAbility;
 import com.milite.battle.abilities.ModeSwitchAbility;
-import com.milite.battle.artifacts.DryWoodArtifact;
-import com.milite.battle.artifacts.PlayerArtifact;
-import com.milite.battle.artifacts.PoisonNeedleArtifact;
+import com.milite.battle.artifacts.*;
 import com.milite.constants.BattleConstants;
 import com.milite.dto.PlayerDto;
 import com.milite.util.KoreanUtil;
@@ -86,6 +84,23 @@ public class BattleContext {
 
 	public void damageUnit(BattleUnit unit, int damage) {
 		int finalDamage = damage;
+		
+		if (unit.getUnitType().equals("Player") && damage > 0) {
+			PlayerDto player = (PlayerDto) unit;
+			for(PlayerArtifact artifact : player.getArtifacts()) {
+				if(artifact instanceof SlipperyLeatherArtifact) {
+					SlipperyLeatherArtifact leather = (SlipperyLeatherArtifact) artifact;
+					if(leather.canUse()) {
+						leather.useEffect();
+						finalDamage = 0;
+						
+						addLogEntry(unit.getName() + "의 미끄러운 가죽 보호대가 " + damage + " 피해를 완전히 무효화했습니다!");
+	                    break;
+					}
+				}
+			}
+		}
+		
 		if (unit.getUnitType().equals("Monster")) {
 			finalDamage = applyDefenseReduction(unit, damage);
 		}
@@ -95,7 +110,7 @@ public class BattleContext {
 			int currentHp = player.getCurr_hp();
 			int newHp = Math.max(currentHp - finalDamage, 0);
 			player.setCurr_hp(newHp);
-
+//todo 부활 처리 넣어야함
 			addLogEntry(unit.getName() + KoreanUtil.getJosa(unit.getName(), "이 ", "가 ") + finalDamage + "의 피해를 받았습니다");
 			log.info(unit.getName() + " 피해: " + finalDamage + " (HP: " + currentHp + " → " + newHp + ")");
 		} else if (unit.getUnitType().equals("Monster")) {

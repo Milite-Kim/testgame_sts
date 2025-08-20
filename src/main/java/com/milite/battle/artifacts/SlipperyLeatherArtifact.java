@@ -2,12 +2,13 @@ package com.milite.battle.artifacts;
 
 import com.milite.battle.BattleContext;
 import com.milite.battle.BattleUnit;
-import com.milite.constants.BattleConstants;
 import com.milite.util.KoreanUtil;
 
-public class BrokenBladeArtifact implements PlayerArtifact {
-	private static final String ARTIFACT_NAME = "부서진 칼날";
-	private static final String ARTIFACT_DESCRIPTION = "피격 시, 2 피해 반사";
+public class SlipperyLeatherArtifact implements PlayerArtifact {
+	private static final String ARTIFACT_NAME = "미끄러운 가죽 보호대";
+	private static final String ARTIFACT_DESCRIPTION = "전투마다 처음 받는 피해를 무효화함";
+
+	private boolean isUsed = false;
 
 	@Override
 	public void onPlayerAttack(BattleUnit attacker, BattleUnit target, BattleContext context) {
@@ -21,14 +22,11 @@ public class BrokenBladeArtifact implements PlayerArtifact {
 
 	@Override
 	public void onPlayerDefensePerHit(BattleUnit defender, BattleUnit attacker, int damage, BattleContext context) {
-		if (attacker != null && attacker.isAlive()) {
-			context.addReflectDamage(attacker, BattleConstants.getBrokenBladeReflectDamage());
-			System.out.println("반사 피해 예약 : " + BattleConstants.getBrokenBladeReflectDamage());
+		if (!isUsed && damage > 0) {
+			isUsed = true;
 
-			context.addLogEntry(defender.getName(), "Broken_Blade", defender.getName()
-					+ KoreanUtil.getJosa(defender.getName(), "의 ", "의 ") + ARTIFACT_NAME + "이 날카롭게 빛을 냅니다.");
-		} else {
-			System.out.println("BrokenBlade 발동 실패 : 공격자가 없거나 사망");
+			context.addLogEntry(defender.getName(), "slippery_leather_effect", defender.getName() + "의 공격이 "
+					+ KoreanUtil.getJosa(defender.getName(), "의 ", "의 ") + ARTIFACT_NAME + "로 인해 미끄러졌습니다.");
 		}
 	}
 
@@ -56,5 +54,25 @@ public class BrokenBladeArtifact implements PlayerArtifact {
 	@Override
 	public String getArtifactDescription() {
 		return ARTIFACT_DESCRIPTION;
+	}
+	
+	public boolean canUse() {
+		return !isUsed;
+	}
+
+	public void useEffect() {
+		this.isUsed = true;
+	}
+
+	public boolean hasUsedEffect() {
+		return isUsed;
+	}
+	
+	public String getStatusDescription() {
+		if (isUsed) {
+			return "미끄러운 가죽 보호대: 효과 사용됨";
+		} else {
+			return "미끄러운 가죽 보호대: 다음 피해 무효화 준비됨";
+		}
 	}
 }
