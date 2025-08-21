@@ -16,6 +16,9 @@ import lombok.*;
 
 import java.util.*;
 
+import lombok.extern.log4j.Log4j;
+
+@Log4j
 @CrossOrigin(origins = "http://localhost:3000")
 @RequestMapping("/battle") // 경로는 필요에 의해 수정 해야함
 @RestController
@@ -38,7 +41,6 @@ public class BattleController {
 			BattleResultDto initResult = service.battle(PlayerID);
 
 			Map<String, Object> battleStatus = service.getBattleStatus(PlayerID);
-
 			Map<String, Object> responseMap = new HashMap<>();
 			responseMap.put("stage", "battleReady");
 			responseMap.put("message", "전투가 시작되었습니다. 스킬을 선택해주세요");
@@ -57,6 +59,9 @@ public class BattleController {
 			return ResponseEntity.badRequest().body(errorMap);
 		}
 	}
+
+	// 혼령의 인도인 전투는 battle/event로 연결하게 만들기. 이 경우 몹 생성까지 전부 여기서 만들고 세션 저장을 시켜야함. 전투의
+	// 경우 이미 battle/battle에서 혼령까지 되어있으니 문제 없을 것으로 보임
 
 	@PostMapping("/battle")
 	@ResponseBody
@@ -184,7 +189,13 @@ public class BattleController {
 	}
 
 	private SkillDto getSkillInfo(String skillID) {
-		return skillservice.getSkillInfo(skillID);
+		try {
+			Integer skillIdInt = Integer.parseInt(skillID);
+			return skillservice.getSkillInfo(skillIdInt);
+		} catch (NumberFormatException e) {
+			log.error("잘못된 스킬 ID 형식 : " + skillID);
+			return null;
+		}
 	}
 
 	private boolean checkBattleEndCondition(Map<String, Object> status) {

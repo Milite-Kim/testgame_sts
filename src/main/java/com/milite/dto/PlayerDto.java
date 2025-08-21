@@ -5,6 +5,7 @@ import lombok.*;
 import com.milite.battle.BattleContext;
 import com.milite.battle.BattleUnit;
 import com.milite.battle.artifacts.PlayerArtifact;
+import com.milite.util.StringUtil;
 
 import java.util.*;
 
@@ -20,9 +21,16 @@ public class PlayerDto implements BattleUnit {
 	int luck;
 	String WhereSession;
 	int WhereStage;
-	Map<String, Integer> statusEffects = new HashMap<>();
-	// private booleanSwiftSkill = false;
 
+	int EventAtk;
+	int EventCurrHp;
+	int EventMaxHp;
+
+	String Using_Skill;
+	String Own_Skill;
+	String Own_Artifact;
+
+	Map<String, Integer> statusEffects = new HashMap<>();
 	private List<PlayerArtifact> artifacts = new ArrayList<>();
 
 	@Override
@@ -109,25 +117,48 @@ public class PlayerDto implements BattleUnit {
 	}
 
 	public void addArtifact(PlayerArtifact artifact) {
-		if(artifact != null) {// 해당 아티팩트가 이미 보유 중인지는 전 단계에서 검사하는 걸로 결정
+		if (artifact != null) {// 해당 아티팩트가 이미 보유 중인지는 전 단계에서 검사하는 걸로 결정
 			artifacts.add(artifact);
 		}
 	}
-	
+
 	public void removeArtifact(PlayerArtifact artifact) {
 		artifacts.remove(artifact);
 	}
-	
-	public List<PlayerArtifact> getArtifacts(){
+
+	public List<PlayerArtifact> getArtifacts() {
 		return new ArrayList<>(artifacts);
 	}
-	
+
 	public boolean hasArtifact(String artifactName) {
 		return artifacts.stream().anyMatch(artifact -> artifact.getArtifactName().equals(artifactName));
 	}
-	
+
 	public int getArtifactCount() {
 		return artifacts.size();
 	}
+
+	public List<String> getOwnSkillList(){
+		return StringUtil.splitCommaString(this.Own_Skill);
+	}
 	
+	public List<String> getUsingSkillList(){
+		return StringUtil.splitCommaString(this.Using_Skill);
+	}
+	
+	public List<String> getOwnArtifactList(){
+		return StringUtil.splitCommaString(this.Own_Artifact);
+	}
+	
+	public boolean hasArtifactByID(String artifactID) {
+		return StringUtil.containsInCommaString(this.Own_Artifact, artifactID);
+	}
+	
+	public void addSkill(String skillID) {
+		this.Own_Skill = StringUtil.addToCommaString(this.Own_Skill, skillID);
+	}
+	
+	public void addArtifactByID(String artifactID) {
+		this.Own_Artifact = StringUtil.addToCommaString(this.Own_Artifact, artifactID);
+	}
 }

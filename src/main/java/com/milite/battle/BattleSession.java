@@ -48,7 +48,7 @@ public class BattleSession {
 		int totalHitTimes= skill.getHit_time() + getPlayerExtraHitTimes(player);
 		
 		for (int hitCount = 0; hitCount < totalHitTimes; hitCount++) {
-			executeAttackByType(skill.getTarget(), validTargets, targetIndex, attacker, skill, attackerAtk, actor,
+			executeAttackByType(skill.getHit_target(), validTargets, targetIndex, attacker, skill, attackerAtk, actor,
 					actorJosa, battleState, context);
 		}
 

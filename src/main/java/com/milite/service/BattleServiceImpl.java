@@ -419,8 +419,8 @@ public class BattleServiceImpl implements BattleService {
 			return;
 		}
 
-		Integer effectRate = skill.getStatusEffectRate();
-		Integer effectTurns = skill.getStatusEffectTurn();
+		Integer effectRate = skill.getStatusEffect_rate();
+		Integer effectTurns = skill.getStatusEffect_turn();
 
 		if (effectRate == null || effectRate <= 0 || effectTurns == null || effectTurns <= 0) {
 			return; // 상태이상 없음
@@ -433,7 +433,7 @@ public class BattleServiceImpl implements BattleService {
 			return;
 		}
 
-		String statusType = skill.getStatusEffectName();
+		String statusType = skill.getStatusEffect_name();
 		if (statusType != null) {
 			int finalTurns = effectTurns;
 
@@ -452,7 +452,7 @@ public class BattleServiceImpl implements BattleService {
 			}
 
 			log.info(statusType + " (확률: " + effectRate + "%, 지속: " + effectTurns + "턴)");
-			applyStatusEffectToTargets(skill.getTarget(), allUnits, targetIndex, statusType, finalTurns, context);
+			applyStatusEffectToTargets(skill.getHit_target(), allUnits, targetIndex, statusType, finalTurns, context);
 		}
 	}
 

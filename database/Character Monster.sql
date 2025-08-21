@@ -11,7 +11,7 @@ luck int
 
 insert into CharacterDB values ("Warrior", 100, 10, 5);
 insert into CharacterDB values ("Thief", 90, 5, 10);
-insert into CharacterDB values ("Magician", 80, 15, 3);
+insert into CharacterDB values ("Mage", 80, 15, 3);
 
 drop table CharacterDB;
 
