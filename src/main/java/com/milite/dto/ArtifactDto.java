@@ -6,9 +6,9 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 public class ArtifactDto {
-	int ID;
-	String Name;
-	String Job;
+	int ArtifactID;
+	String ArtifactName;
+	String ArtifactJob;
 	String Session;
 	String Effect;
 	String Description;
