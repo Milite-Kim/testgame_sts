@@ -84,23 +84,23 @@ public class BattleContext {
 
 	public void damageUnit(BattleUnit unit, int damage) {
 		int finalDamage = damage;
-		
+
 		if (unit.getUnitType().equals("Player") && damage > 0) {
 			PlayerDto player = (PlayerDto) unit;
-			for(PlayerArtifact artifact : player.getArtifacts()) {
-				if(artifact instanceof SlipperyLeatherArtifact) {
+			for (PlayerArtifact artifact : player.getArtifacts()) {
+				if (artifact instanceof SlipperyLeatherArtifact) {
 					SlipperyLeatherArtifact leather = (SlipperyLeatherArtifact) artifact;
-					if(leather.canUse()) {
+					if (leather.canUse()) {
 						leather.useEffect();
 						finalDamage = 0;
-						
+
 						addLogEntry(unit.getName() + "의 미끄러운 가죽 보호대가 " + damage + " 피해를 완전히 무효화했습니다!");
-	                    break;
+						break;
 					}
 				}
 			}
 		}
-		
+
 		if (unit.getUnitType().equals("Monster")) {
 			finalDamage = applyDefenseReduction(unit, damage);
 		}
@@ -109,8 +109,16 @@ public class BattleContext {
 			PlayerDto player = (PlayerDto) unit;
 			int currentHp = player.getCurr_hp();
 			int newHp = Math.max(currentHp - finalDamage, 0);
+
+			if (newHp <= 0 && currentHp > 0) {
+				boolean revived = checkAndExecuteRevival(player);
+				if (revived) {
+					return;
+				}
+			}
+
 			player.setCurr_hp(newHp);
-//todo 부활 처리 넣어야함
+
 			addLogEntry(unit.getName() + KoreanUtil.getJosa(unit.getName(), "이 ", "가 ") + finalDamage + "의 피해를 받았습니다");
 			log.info(unit.getName() + " 피해: " + finalDamage + " (HP: " + currentHp + " → " + newHp + ")");
 		} else if (unit.getUnitType().equals("Monster")) {
@@ -130,6 +138,18 @@ public class BattleContext {
 				log.info(unit.getName() + " 피해: " + finalDamage + " (HP: " + currentHp + " → " + newHp + ")");
 			}
 		}
+	}
+
+	private boolean checkAndExecuteRevival(PlayerDto player) {
+		for (PlayerArtifact artifact : player.getArtifacts()) {
+			if (artifact instanceof PhoenixFeatherArtifact) {
+				PhoenixFeatherArtifact feather = (PhoenixFeatherArtifact) artifact;
+				if (feather.canRevive()) {
+					return feather.executeRevival(player, this);
+				}
+			}
+		}
+		return false;
 	}
 
 	private int applyDefenseReduction(BattleUnit unit, int damage) {
@@ -250,9 +270,9 @@ public class BattleContext {
 			decreaseStatusTurns(unit, BattleConstants.STATUS_POISON);
 		}
 
-	    decreaseStatusTurns(unit, BattleConstants.STATUS_BLIND);
-	    decreaseStatusTurns(unit, BattleConstants.STATUS_FREEZE);
-	    decreaseStatusTurns(unit, BattleConstants.STATUS_STUN);
+		decreaseStatusTurns(unit, BattleConstants.STATUS_BLIND);
+		decreaseStatusTurns(unit, BattleConstants.STATUS_FREEZE);
+		decreaseStatusTurns(unit, BattleConstants.STATUS_STUN);
 	}
 
 	public void decreaseStatusTurns(BattleUnit unit, String statusType) {

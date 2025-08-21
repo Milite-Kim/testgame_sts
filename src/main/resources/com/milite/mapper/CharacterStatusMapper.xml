@@ -4,7 +4,8 @@
 	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.milite.mapper.CharacterStatusMapper">
 	<!-- 캐릭터 DB에서 해당 이름과 일치하는 캐릭터의 정보 가져오기 -->
-	<select id="getCharInfo" resultType="com.milite.dto.CharacterDto">
+	<select id="getCharInfo"
+		resultType="com.milite.dto.CharacterDto">
 		select * from CharacterDB
 		where
 		name = #{name}
@@ -12,7 +13,8 @@
 
 	<!-- 플레이어DB에서 현재 플레이 중인 캐릭터 상황 불러오기 -->
 	<select id="getPlayerInfo" resultType="com.milite.dto.PlayerDto">
-		select * from PlayerDB where
+		select * from PlayerDB
+		where
 		Player_ID = #{PlayerID}
 	</select>
 
@@ -29,6 +31,16 @@
 		<where>
 			<if test="Player_ID != null">Player_ID = #{Player_ID}</if>
 		</where>
+	</update>
+
+	<update id="replacePhoenixFeathers" parameterType="String">
+		UPDATE PlayerDB
+		SET Own_Artifact =
+		REPLACE(Own_Artifact, '119', '120')
+		WHERE Player_ID =
+		#{playerID}
+		AND
+		FIND_IN_SET('119', Own_Artifact) > 0
 	</update>
 </mapper>
 	

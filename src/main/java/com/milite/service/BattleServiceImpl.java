@@ -674,4 +674,8 @@ public class BattleServiceImpl implements BattleService {
 		return dto;
 	}
 
+	@Override
+	public BattleSession getCurrentBattleSession(String PlayerID) {
+		return SessionMemory.get(PlayerID);
+	}
 }

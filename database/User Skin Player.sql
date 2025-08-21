@@ -27,6 +27,7 @@ EventAtk int,
 EventCurrHp int,
 EventMaxHp int,
 Using_Skill json,
-Own_Skill json
+Own_Skill json,
+Own_Artifact varchar(500)
 );
 # 임시 테스터 플레이어 데이터를 넣어서 진행해야함. 스킬의 경우 SkillDB 형식에 맞춰서 적당히 넣을 것
