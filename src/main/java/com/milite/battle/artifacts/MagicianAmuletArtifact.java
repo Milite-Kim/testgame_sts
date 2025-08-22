@@ -5,6 +5,10 @@ import com.milite.battle.BattleUnit;
 import com.milite.constants.BattleConstants;
 
 public class MagicianAmuletArtifact implements PlayerArtifact{
+	/* 전반적인 내용은 PlayerArtifact의 주석 확인
+	 * 아티팩트의 내용은 아래의 내용 확인
+	 * 실제 배율을 반환 받아서 적용하는 건 BattleSession에 있음
+	 * */
 	private static final String ARTIFACT_NAME = "마법사의 부적";
 	private static final String ARTIFACT_DESCRIPTION = "약세 상성 공격 시, 배율 10% 증가";
 	
@@ -50,10 +54,12 @@ public class MagicianAmuletArtifact implements PlayerArtifact{
 		return ARTIFACT_DESCRIPTION;
 	}
 	
+	// 현재가 약세 공격인가?
 	public boolean hasElementDisadvantage(double baseMultiplier) {
 		return baseMultiplier <1.0;
 	}
 	
+	// 반환해야할 보정 배율 0.1
 	public double getElementDisadvantageBonus() {
 		return BattleConstants.getMagicianAmuletBonus();
 	}

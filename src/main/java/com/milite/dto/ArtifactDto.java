@@ -9,7 +9,7 @@ public class ArtifactDto {
 	int ArtifactID;
 	String ArtifactName;
 	String ArtifactJob;
-	String Session;
-	String Effect;
-	String Description;
+	String ArtifactSession;
+	String ArtifactEffect;
+	String ArtifactDescription;
 }

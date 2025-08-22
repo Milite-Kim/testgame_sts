@@ -3,6 +3,7 @@ package com.milite.battle.artifacts;
 import java.util.*;
 
 public class PlayerArtifactFactory {
+	// 아티팩트를 다른 곳에서 사용 가능한 형태로 생성하는 곳
 	private static final Map<String, PlayerArtifact> artifacts = new HashMap<>();
 
 	static {

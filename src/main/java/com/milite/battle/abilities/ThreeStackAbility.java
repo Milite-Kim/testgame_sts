@@ -7,8 +7,12 @@ import com.milite.constants.BattleConstants;
 import com.milite.util.KoreanUtil;
 
 public class ThreeStackAbility implements SpecialAbility {
+	/* 각 메서드의 전반적인 내용은 SpecialAbility 파일의 주석을 우선 확인 
+	 * 3의 배수 턴마다 공격력 증가
+	 * */
 	@Override
 	public void onAttack(BattleUnit attacker, BattleUnit target, BattleContext context) {
+		// 공격 시, 해당 특수 효과가 적용되어있었다면 특수한 로그 출력
 		if (isThreeMultipleTurn(context.getCurrentTurn())) {
 			context.addLogEntry(attacker.getName(), "three_stack",
 					attacker.getName() + KoreanUtil.getJosa(attacker.getName(), "이 ", "가 ") + "무언가를 떨어트립니다.");
@@ -32,6 +36,7 @@ public class ThreeStackAbility implements SpecialAbility {
 
 	@Override
 	public void onTurnStart(BattleUnit unit, BattleContext context) {
+		// 턴 시작 시, 현재가 3의 배수 턴인지 확인하고 공격력 증가 적용
 		if (isThreeMultipleTurn(context.getCurrentTurn())) {
 			context.addLogEntry(unit.getName(), "power_up",
 					unit.getName() + KoreanUtil.getJosa(unit.getName(), "의 ", "의 ") + "공격력이 상승합니다!");
@@ -48,6 +53,7 @@ public class ThreeStackAbility implements SpecialAbility {
 		return "ThreeStack";
 	}
 
+	// 데미지 증가 배율 반환
 	public static double getDamageMultiplier(BattleUnit unit, int currentTurn) {
 		if (unit instanceof BattleMonsterUnit) {
 			BattleMonsterUnit monster = (BattleMonsterUnit) unit;
@@ -58,6 +64,7 @@ public class ThreeStackAbility implements SpecialAbility {
 		return 1.0;
 	}
 
+	// 현재가 3의 배수 턴인지 반환
 	public static boolean isThreeMultipleTurn(int turn) {
 		return turn > 0 && turn % 3 == 0;
 	}

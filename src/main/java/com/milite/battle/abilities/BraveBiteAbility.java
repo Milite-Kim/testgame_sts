@@ -6,6 +6,9 @@ import com.milite.constants.BattleConstants;
 import com.milite.util.KoreanUtil;
 
 public class BraveBiteAbility implements SpecialAbility {
+	/* 각 메서드의 전반적인 내용은 SpecialAbility 파일의 주석을 우선 확인 
+	 * 피격 시, 적에게 반사 피해
+	 * */
 	@Override
 	public void onAttack(BattleUnit attacker, BattleUnit target, BattleContext context) {
 

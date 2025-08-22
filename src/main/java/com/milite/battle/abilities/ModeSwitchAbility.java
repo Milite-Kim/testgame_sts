@@ -7,6 +7,9 @@ import com.milite.constants.BattleConstants;
 import com.milite.util.KoreanUtil;
 
 public class ModeSwitchAbility implements SpecialAbility {
+	/* 각 메서드의 전반적인 내용은 SpecialAbility 파일의 주석을 우선 확인 
+	 * 공격 모드와 방어 모드를 전환하며, 가하는 데미지와 받는 데미지에 변동이 생김
+	 * */
 	@Override
 	public void onAttack(BattleUnit attacker, BattleUnit target, BattleContext context) {
 
@@ -29,6 +32,7 @@ public class ModeSwitchAbility implements SpecialAbility {
 
 	@Override
 	public void onTurnStart(BattleUnit unit, BattleContext context) {
+		// 몬스터가 아니면 사용 하지 않음
 		if (!(unit instanceof BattleMonsterUnit)) {
 			return;
 		}
@@ -60,6 +64,7 @@ public class ModeSwitchAbility implements SpecialAbility {
 		return monster.getFormCount();
 	}
 
+	// 홀수 턴에 무슨 모드로 할지 선택
 	public static boolean shouldUseOffensiveStance(int formCount, int currentTurn) {
 		boolean isOddTurn = currentTurn % 2 == 1;
 
@@ -70,6 +75,7 @@ public class ModeSwitchAbility implements SpecialAbility {
 		}
 	}
 
+	// 해당 모드에서 데미지 배율 반환
 	public static double getAttackMultiplier(BattleUnit unit, int currentTurn) {
 		if (!(unit instanceof BattleMonsterUnit)) {
 			return 1.0;
@@ -86,6 +92,7 @@ public class ModeSwitchAbility implements SpecialAbility {
 		return isOffensive ? BattleConstants.getModeSwitchOffenseAtk() : BattleConstants.getModeSwitchDefenseAtk();
 	}
 
+	// 해당 모드에서 받는 피해 배율 반환
 	public static double getDefenseMulitplier(BattleUnit unit, int currentTurn) {
 		if (!(unit instanceof BattleMonsterUnit)) {
 			return 1.0;

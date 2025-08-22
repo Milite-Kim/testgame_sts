@@ -5,6 +5,10 @@ import com.milite.battle.BattleUnit;
 import com.milite.util.KoreanUtil;
 
 public class OverloadCrystalArtifact implements PlayerArtifact {
+	/* 전반적인 내용은 PlayerArtifact의 주석 확인
+	 * 아티팩트의 내용은 아래의 내용 확인
+	 * 확정 명중 보정은 BattleSession의 isAttacked() 메서드에 처리되어있음
+	 * */
 	private static final String ARTIFACT_NAME = "과부하 결정";
 	private static final String ARTIFACT_DESCRIPTION = "첫 턴에 하는 공격이 확정 명중";
 
@@ -12,11 +16,12 @@ public class OverloadCrystalArtifact implements PlayerArtifact {
 
 	@Override
 	public void onPlayerAttack(BattleUnit attacker, BattleUnit target, BattleContext context) {
+		// 공격 시, 이 옵션이 사용 가능한지 확인 후 사용 가능해지면 로그 남기기
 		if (!isUsed) {
 			isUsed = true;
 
 			context.addLogEntry(attacker.getName(), "overload_crystal_effect", attacker.getName()
-					+ KoreanUtil.getJosa(attacker.getName(), "의 ", "의 ") + ARTIFACT_NAME + "이 밝게 빛나며 확정 명중을 보장합니다!");
+					+ KoreanUtil.getJosa(attacker.getName(), "의 ", "의 ") + ARTIFACT_NAME + "이 불안정하게 빛을 발합니다.");
 		}
 	}
 

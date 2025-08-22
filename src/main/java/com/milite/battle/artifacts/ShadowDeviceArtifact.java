@@ -5,6 +5,10 @@ import com.milite.battle.BattleUnit;
 import com.milite.constants.BattleConstants;
 
 public class ShadowDeviceArtifact implements PlayerArtifact {
+	/* 전반적인 내용은 PlayerArtifact의 주석 확인
+	 * 아티팩트의 내용은 아래의 내용 확인
+	 * 해당 아티팩트의 효과는 BattleSession의 공격 횟수 메서드를 통해 
+	 * */
 	private static final String ARTIFACT_NAME = "그림자 생성 장치";
 	private static final String ARTIFACT_DESCRIPTION = "공격 횟수 1회 증가";
 

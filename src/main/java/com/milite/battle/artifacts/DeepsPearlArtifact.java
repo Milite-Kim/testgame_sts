@@ -6,6 +6,9 @@ import com.milite.constants.BattleConstants;
 import com.milite.util.KoreanUtil;
 
 public class DeepsPearlArtifact implements PlayerArtifact {
+	/* 전반적인 내용은 PlayerArtifact의 주석 확인
+	 * 아티팩트의 내용은 아래의 내용 확인
+	 * */
 	private static final String ARTIFACT_NAME = "심해의 진주";
 	private static final String ARTIFACT_DESCRIPTION = "공격 적중 시 2 회복";
 
@@ -16,10 +19,12 @@ public class DeepsPearlArtifact implements PlayerArtifact {
 
 	@Override
 	public void onPlayerHit(BattleUnit attacker, BattleUnit target, int damageDealt, BattleContext context) {
+		// 실제로 가한 데미지가 0을 넘을 때
 		if (damageDealt > 0) {
 			int healAmount = getHealAmount();
 			int actualHealed = context.healUnit(attacker, healAmount);
 
+			// 실제로 회복이 되었을 때
 			if (actualHealed > 0) {
 				context.addLogEntry(attacker.getName(), "artifact_heal",
 						attacker.getName() + KoreanUtil.getJosa(attacker.getName(), "이 ", "가 ") + "심해의 진주 효과로 "

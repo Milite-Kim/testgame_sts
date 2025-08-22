@@ -5,6 +5,9 @@ import com.milite.battle.BattleUnit;
 import com.milite.constants.BattleConstants;
 
 public class FighterGuildMedalArtifact implements PlayerArtifact {
+	/* 전반적인 내용은 PlayerArtifact의 주석 확인
+	 * 아티팩트의 내용은 아래의 내용 확인
+	 * */
 	private static final String ARTIFACT_NAME = "파이터 길드 메달";
 	private static final String ARTIFACT_DESCRIPTION = "무속성 스킬 카드의 데미지 2 증가";
 	private static final String TARGET_ELEMENT = "None";
@@ -50,6 +53,7 @@ public class FighterGuildMedalArtifact implements PlayerArtifact {
 		return ARTIFACT_DESCRIPTION;
 	}
 	
+	// 스킬의 속성이 아티팩트 적용 속성인지 확인
 	public boolean isTargetElement(String skillElement) {
 		return TARGET_ELEMENT.equals(skillElement);
 	}
@@ -58,6 +62,7 @@ public class FighterGuildMedalArtifact implements PlayerArtifact {
 		return BattleConstants.getFighterGuildMedalBonus();
 	}
 	
+	// 조건이 맞다면 추가 데미지 수치 반환
 	public int calculateDamageBonus(String skillElement) {
 		if(isTargetElement(skillElement)) {
 			return getDamageBonus();

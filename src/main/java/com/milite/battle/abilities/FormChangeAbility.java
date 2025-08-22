@@ -7,6 +7,9 @@ import com.milite.constants.BattleConstants;
 import com.milite.util.KoreanUtil;
 
 public class FormChangeAbility implements SpecialAbility {
+	/* 각 메서드의 전반적인 내용은 SpecialAbility 파일의 주석을 우선 확인 
+	 * 
+	 * 매 턴, 공격 모드와 수비 모드가 전환됨*/
 	@Override
 	public void onAttack(BattleUnit attacker, BattleUnit target, BattleContext context) {
 
@@ -29,11 +32,13 @@ public class FormChangeAbility implements SpecialAbility {
 
 	@Override
 	public void onTurnStart(BattleUnit unit, BattleContext context) {
+		// 유닛이 몬스터가 아닌 경우 발동하지 않음
 		if (!(unit instanceof BattleMonsterUnit)) {
 			return;
 		}
 
 		BattleMonsterUnit monster = (BattleMonsterUnit) unit;
+		// 현재 턴을 확인하고, 해당 턴에 따라 공격 모드인지 수비 모드인지 정하고 적용
 		int currentTurn = context.getCurrentTurn();
 		int formCount = getFormCount(monster);
 
@@ -63,6 +68,7 @@ public class FormChangeAbility implements SpecialAbility {
 		return monster.getFormCount();
 	}
 	
+	// 공격 모드 턴인지 아닌지 확인
 	public static boolean shouldUseOffensiveStance(int formCount, int currentTurn) {
 		boolean isOddTurn = currentTurn %2 == 1;
 		
@@ -73,11 +79,14 @@ public class FormChangeAbility implements SpecialAbility {
 		}
 	}
 	
+	// 현재 상태에 따른 데미지 배율 반환
 	public static double getAttackMultiplier(BattleUnit unit, int currentTurn) {
+		// 플레이어는 1배 반환
 		if(!(unit instanceof BattleMonsterUnit)) {
 			return 1.0;
 		}
 		
+		// 이 특수 능력이 없다면 1배 반환
 		BattleMonsterUnit monster = (BattleMonsterUnit) unit;
 		if(!"FormChange".equals(monster.getSpecial())) {
 			return 1.0;
@@ -86,9 +95,11 @@ public class FormChangeAbility implements SpecialAbility {
 		int formCount = getFormCount(monster);
 		boolean isOffensive = shouldUseOffensiveStance(formCount, currentTurn);
 		
+		// 공격 모드면 공격 모드 배율 반환, 방어 모드면 방어 모드 배율 반환
 		return isOffensive ? BattleConstants.getFormChangeOffenseAtk() : BattleConstants.getFormChangeDefenseAtk();
 	}
 	
+	// 현재 상태에 따른 받는 피해 감소 배율 반환. 세부 내용은 위의 getAttackMultiplier 와 동일
 	public static double getDefenseMultiplier(BattleUnit unit, int currentTurn) {
 		if(!(unit instanceof BattleMonsterUnit)) {
 			return 1.0;

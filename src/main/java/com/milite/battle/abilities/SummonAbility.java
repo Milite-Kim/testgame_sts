@@ -10,6 +10,9 @@ import com.milite.constants.BattleConstants;
 import com.milite.util.KoreanUtil;
 
 public class SummonAbility implements SpecialAbility {
+	/* 각 메서드의 전반적인 내용은 SpecialAbility 파일의 주석을 우선 확인 
+	 * 소환 능력, 실제 소환 메커니즘은 BattleSession 확인
+	 * */
 	@Override
 	public void onAttack(BattleUnit attacker, BattleUnit target, BattleContext context) {
 
@@ -45,6 +48,7 @@ public class SummonAbility implements SpecialAbility {
 		return "Summon";
 	}
 
+	// 소환을 할지 말지 결정
 	public boolean shouldSummon(List<BattleUnit> allUnits) {
 		int servantCount = countServants(allUnits);
 
@@ -69,6 +73,7 @@ public class SummonAbility implements SpecialAbility {
 		return count;
 	}
 
+	// 소환했을 때, 로그 남기기
 	public void performSummon(BattleUnit summoner, BattleContext context) {
 		context.addLogEntry(summoner.getName(), "summon",
 				summoner.getName() + KoreanUtil.getJosa(summoner.getName(), "이 ", "가 ") + "따라오는 혼들 중 하나에게 손짓을 하였다");

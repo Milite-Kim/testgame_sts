@@ -5,6 +5,9 @@ import com.milite.battle.BattleUnit;
 import com.milite.constants.BattleConstants;
 
 public class DarkHammerArtifact implements PlayerArtifact {
+	/* 전반적인 내용은 PlayerArtifact의 주석 확인
+	 * 아티팩트의 내용은 아래의 내용 확인
+	 * */
 	private static final String ARTIFACT_NAME = "어두운 망치";
 	private static final String ARTIFACT_DESCRIPTION = "기절 상태이상 부여 시, 유지시간 1턴 증가";
 

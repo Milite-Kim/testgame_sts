@@ -5,6 +5,9 @@ import com.milite.battle.BattleUnit;
 import com.milite.constants.BattleConstants;
 
 public class BlueTridentArtifact implements PlayerArtifact {
+	/* 전반적인 내용은 PlayerArtifact의 주석 확인
+	 * 아티팩트의 내용은 아래의 내용 확인
+	 * */
 	private static final String ARTIFACT_NAME = "푸른 빛의 삼지창";
 	private static final String ARTIFACT_DESCRIPTION = "물속성 스킬 카드의 데미지 2 증가";
 	private static final String TARGET_ELEMENT = "Water";

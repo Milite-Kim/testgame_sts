@@ -15,6 +15,32 @@ import lombok.extern.log4j.Log4j;
 @Log4j
 @Data
 public class BattleContext {
+
+	/*
+	 * BattleContext : 전투 행동에 대한 정의 및 실행에 대한 파일
+	 * 
+	 * 【핵심 개념】 전투 중 발생하는 모든 "게임 용어"를 "실제 동작"으로 변환하는 행동 사전
+	 *  "유닛을 힐한다" = 현재체력 증가 (최대체력 초과 불가) 
+	 *  "데미지를 준다" = 방어력 적용 후 체력 감소 (최소 1 피해)
+	 *  "상태이상을 건다" = 지연 큐에 등록하여 나중에 일괄 처리
+	 * 
+	 * 【주요 책임】
+	 *  1. 게임 규칙 강제: 체력 제한, 피해 최소값, 상태이상 중복 등
+	 *  2. 지연 액션 관리: 반사 데미지, 상태이상 등 턴 종료 후 처리할 일들
+	 *  3. 로그 생성: 모든 행동에 대한 상세 기록
+	 *  4. 상태이상 통합 관리: 적용/효과/해제를 일관되게 처리
+	 * 
+	 * 【다른 클래스와의 관계】
+	 *  - BattleSession: 전투 규칙 담당, Context에게 "행동 실행" 요청
+	 *  - BattleServiceImpl: 시스템 관리 담당, Session을 통해 Context 간접 사용
+	 *  - 특수능력/아티팩트: Context를 통해서만 게임 상태 변경 가능
+	 * 
+	 * 【설계 원칙
+	 *  - 모든 게임 상태 변경은 반드시 이 클래스를 거쳐야 함
+	 *  - 직접적인 HP/상태 조작 금지, 규칙이 적용된 메서드만 제공
+	 *  - 지연 액션으로 복잡한 연쇄 반응을 안전하게 처리
+	 */
+
 	private BattleSession session;
 	private int currentTurn;
 	private List<BattleLogEntry> logs = new ArrayList<>();
@@ -27,25 +53,30 @@ public class BattleContext {
 		this.delayedActions = new ArrayList<>();
 	}
 
+	// 지연 액션 리스트에 반사 데미지를 등록해둠
 	public void addReflectDamage(BattleUnit target, int damage) {
 		delayedActions.add(new ReflectDamageAction(target, damage));
 		log.debug(target.getName() + "에게 " + damage + "의 반사 피해가 예약되었습니다.");
 	}
 
+	// 지연 액션에 상태이상 처리 등록해둠(아래의 메서드로 이관함)
 	public void addStatusEffect(BattleUnit target, String statusType, int turns) {
 		addStatusEffect(target, statusType, turns, null);
 	}
-
+	
+	// 지연 액션에 상태이상 처리 등록해둠
 	public void addStatusEffect(BattleUnit target, String statusType, int turns, BattleUnit caster) {
 		delayedActions.add(new StatusEffectAction(target, statusType, turns, caster));
 		log.debug(target.getName() + "에게 " + statusType + " 상태이상(" + turns + " 턴)이 예약되었습니다.");
 	}
 
+	// 몬스터 소환 특수 능력 예약
 	public void addMonsterSummon(String monsterID, int count) {
 		delayedActions.add(new SummonAction(monsterID, count));
 		log.debug("몬스터 소환이 예약되었습니다 : " + monsterID + " x" + count);
 	}
 
+	// 유닛의 체력 회복에 대한 처리(최대 체력을 넘지 않고 실제로 회복된 양을 반환함)
 	public int healUnit(BattleUnit unit, int amount) {
 		if (unit.getUnitType().equals("Player")) {
 			PlayerDto player = (PlayerDto) unit;
@@ -82,6 +113,7 @@ public class BattleContext {
 		return 0;
 	}
 
+	// 유닛에게 피해를 적용(피해 감소, 아티팩트 효과, 부활에 대한 체크 적용)
 	public void damageUnit(BattleUnit unit, int damage) {
 		int finalDamage = damage;
 
@@ -140,6 +172,7 @@ public class BattleContext {
 		}
 	}
 
+	// 부활 메커니즘 처리
 	private boolean checkAndExecuteRevival(PlayerDto player) {
 		for (PlayerArtifact artifact : player.getArtifacts()) {
 			if (artifact instanceof PhoenixFeatherArtifact) {
@@ -152,6 +185,7 @@ public class BattleContext {
 		return false;
 	}
 
+	// 몬스터가 가지는 받는 피해 감소 적용
 	private int applyDefenseReduction(BattleUnit unit, int damage) {
 		if (!(unit instanceof BattleMonsterUnit)) {
 			return damage;
@@ -170,16 +204,19 @@ public class BattleContext {
 		return Math.max(finalDamage, 1);
 	}
 
+	// 전투 로그에 시스템 메시지 추가하기
 	public void addLogEntry(String message) {
 		BattleLogEntry logEntry = new BattleLogEntry("System", "special", message, currentTurn);
 		logs.add(logEntry);
 	}
 
+	// 전투 로그에 액션 내용을 포함한 시스템 메세지 추가하기
 	public void addLogEntry(String actorName, String actionType, String message) {
 		BattleLogEntry logEntry = new BattleLogEntry(actorName, actionType, message, currentTurn);
 		logs.add(logEntry);
 	}
 
+	// 지연 액션 리스트 실행
 	public void executeDelayedActions() {
 		if (delayedActions.isEmpty()) {
 			return;
@@ -206,6 +243,7 @@ public class BattleContext {
 		log.info("지연된 액션 실행 완료");
 	}
 
+	// 배틀 유닛을 하나의 BattleUnit 이라는 자료형으로 묶기
 	public List<BattleUnit> getAllUnits() {
 		List<BattleUnit> allUnits = new ArrayList<>();
 		allUnits.add(session.getPlayer());
@@ -213,18 +251,22 @@ public class BattleContext {
 		return allUnits;
 	}
 
+	// 현재 전투에서 살아있는 적들의 목록 반환하기
 	public List<BattleUnit> getAliveEnemies() {
 		return session.getEnemy().stream().filter(BattleUnit::isAlive).collect(java.util.stream.Collectors.toList());
 	}
 
+	// 플레이어 캐릭터가 살아있는지 반환
 	public boolean isPlayerAlive() {
 		return session.getPlayer().isAlive();
 	}
 
+	// 모든 몬스터가 사망했는지 확인
 	public boolean areAllEnemiesDead() {
 		return session.getEnemy().stream().noneMatch(BattleUnit::isAlive);
 	}
 
+	// 전투에서 세부 내용을 로그에 추가하기
 	public void addDetailedLog(String actorName, String actionType, String message) {
 		String detailedMessage = String.format("[턴 %d] %s", currentTurn, message);
 		BattleLogEntry logEntry = new BattleLogEntry(actorName, actionType, detailedMessage, currentTurn);
@@ -232,26 +274,32 @@ public class BattleContext {
 		log.debug("상세 로그 추가 : " + detailedMessage);
 	}
 
+	// 로그 불러오기
 	public List<BattleLogEntry> getLogs() {
 		return new ArrayList<>(logs);
 	}
 
+	// 세션 반환하기
 	public BattleSession getSession() {
 		return session;
 	}
 
+	// 현재 턴 수 반환하기
 	public int getCurrentTurn() {
 		return currentTurn;
 	}
 
+	// 지연 액션 리스트가 남아있는지 확인하기
 	public boolean hasDelayedActions() {
 		return !delayedActions.isEmpty();
 	}
 
+	// 현재 지연 액션 리스트가 얼마나 남아있는지 확인하기
 	public int getDelayedActionCount() {
 		return delayedActions.size();
 	}
 
+	// 상태 이상 관련 처리 진행하기(피해, 남은 턴 수 감소, 해제 등등)
 	public void processAllStatusEffects(BattleUnit unit) {
 		Map<String, Integer> statusMap = unit.getStatusEffects();
 		if (statusMap == null || statusMap.isEmpty()) {
@@ -275,6 +323,7 @@ public class BattleContext {
 		decreaseStatusTurns(unit, BattleConstants.STATUS_STUN);
 	}
 
+	// 상태이상의 턴 수를 1턴 줄이는 메서드
 	public void decreaseStatusTurns(BattleUnit unit, String statusType) {
 		Map<String, Integer> statusMap = unit.getStatusEffects();
 		if (statusMap == null) {
@@ -294,6 +343,7 @@ public class BattleContext {
 		}
 	}
 
+	// 상태 이상의 데미지가 0보다 크다면 데미지를 입히고, 로그 남기기
 	public void applyStatusDamage(BattleUnit unit, String statusType, int damage) {
 		if (damage > 0) {
 			damageUnit(unit, damage);
@@ -303,6 +353,7 @@ public class BattleContext {
 		}
 	}
 
+	// 아티팩트에 따른 최종적으로 입힐 화상 데미지 계산
 	public int calculateBurnDamage(BattleUnit unit) {
 		int baseBurnDamage = BattleConstants.getBurnDamage();
 
@@ -320,6 +371,7 @@ public class BattleContext {
 		return baseBurnDamage;
 	}
 
+	//스테이터스 이름 반환
 	public String getStatusName(String statusType) {
 		switch (statusType) {
 		case BattleConstants.STATUS_BURN:
@@ -337,6 +389,7 @@ public class BattleContext {
 		}
 	}
 
+	// 중독 관련 아티팩트가 있을 경우 해당 내용 적용
 	void applyPoisonArtifactEffects(BattleUnit caster, BattleUnit target) {
 		if (caster == null || !caster.getUnitType().equals("Player")) {
 			return;
@@ -372,6 +425,7 @@ public class BattleContext {
 	}
 }
 
+// 지연 액션에 대한 내용
 interface DelayedAction {
 	void execute(BattleContext context);
 }
@@ -398,6 +452,7 @@ class ReflectDamageAction implements DelayedAction {
 	}
 }
 
+// 상태이상에 대한 내용
 class StatusEffectAction implements DelayedAction {
 	private final BattleUnit target;
 	private final String statusType;

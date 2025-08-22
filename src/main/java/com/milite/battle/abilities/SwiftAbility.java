@@ -4,6 +4,9 @@ import com.milite.battle.BattleUnit;
 import com.milite.battle.BattleContext;
 
 public class SwiftAbility implements SpecialAbility {
+	/* 각 메서드의 전반적인 내용은 SpecialAbility 파일의 주석을 우선 확인 
+	 * 선공 특수 능력, 이미 BattleSession의 actionOrder 측에서 구현되어있으나, 일관성을 위해 더미 파일 제작
+	 * */
 	@Override
 	public void onAttack(BattleUnit attacker, BattleUnit target, BattleContext context) {
 

@@ -6,6 +6,9 @@ import com.milite.constants.BattleConstants;
 import com.milite.util.KoreanUtil;
 
 public class BrokenBladeArtifact implements PlayerArtifact {
+	/* 전반적인 내용은 PlayerArtifact의 주석 확인
+	 * 아티팩트의 내용은 아래의 내용 확인
+	 * */
 	private static final String ARTIFACT_NAME = "부서진 칼날";
 	private static final String ARTIFACT_DESCRIPTION = "피격 시, 2 피해 반사";
 

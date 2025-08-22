@@ -5,6 +5,10 @@ import com.milite.constants.BattleConstants;
 import com.milite.battle.BattleContext;
 
 public class ElementStoneArtifact implements PlayerArtifact {
+	/* 전반적인 내용은 PlayerArtifact의 주석 확인
+	 * 아티팩트의 내용은 아래의 내용 확인
+	 * 실제 우세 상성 시 배율 증가 처리는 BattleSession에서
+	 * */
 	private static final String ARTIFACT_NAME = "원소의 돌";
 	private static final String ARTIFACT_DESCRIPTION = "우세 상성 공격 시, 배율이 10% 증가";
 
@@ -49,6 +53,7 @@ public class ElementStoneArtifact implements PlayerArtifact {
 		return ARTIFACT_DESCRIPTION;
 	}
 
+	// 우세 공격 상태인지 확인
 	public boolean hasElementAdvantage(double baseMultiplier) {
 		return baseMultiplier > 1.0;
 	}

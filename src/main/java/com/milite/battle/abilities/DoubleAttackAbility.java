@@ -4,7 +4,8 @@ import com.milite.battle.BattleContext;
 import com.milite.battle.BattleUnit;
 
 public class DoubleAttackAbility implements SpecialAbility {
-	// 현재 공격횟수로 이미 구현되어있음
+	/* 각 메서드의 전반적인 내용은 SpecialAbility 파일의 주석을 우선 확인 */
+	// 현재 공격횟수로 이미 구현되어있기에 필요 없는 파일이나 특수능력들의 일관성을 위해 파일을 생성
 	@Override
 	public void onAttack(BattleUnit attacker, BattleUnit target, BattleContext context) {
 

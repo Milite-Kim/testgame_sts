@@ -5,9 +5,31 @@
 <mapper namespace="com.milite.mapper.ArtifactMapper">
 	<select id="getArtifactInfo"
 		resultType="com.milite.dto.ArtifactDto">
-		select * from ArtifactDB
+		select
+		ID as ArtifactID,
+		Name as AritfactName,
+		Job as
+		ArtifactJob,
+		Session as ArtifactSession,
+		Effect as ArtifactEffect,
+		Description as ArtifactDescription
+		from ArtifactDB
 	</select>
-	
-	<select id="getArtifactByID"></select>
+
+	<select id="getArtifactByID"
+		resultType="com.milite.dto.ArtifactDto">
+		select
+		ID as ArtifactID,
+		Name as AritfactName,
+		Job as
+		ArtifactJob,
+		Session as
+		ArtifactSession,
+		Effect as ArtifactEffect,
+		Description as
+		ArtifactDescription
+		from ArtifactDB
+		where Name = #{ArtifactName}
+	</select>
 </mapper>
 	

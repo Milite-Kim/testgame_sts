@@ -5,6 +5,9 @@ import com.milite.battle.BattleUnit;
 import com.milite.constants.BattleConstants;
 
 public class DruidBeltArtifact implements PlayerArtifact {
+	/* 전반적인 내용은 PlayerArtifact의 주석 확인
+	 * 아티팩트의 내용은 아래의 내용 확인
+	 * */
 	private static final String ARTIFACT_NAME = "드루이드의 벨트";
 	private static final String ARTIFACT_DESCRIPTION = "풀속성 스킬 카드의 데미지 2 증가";
 	private static final String TARGET_ELEMENT = "Grass";
@@ -50,6 +53,7 @@ public class DruidBeltArtifact implements PlayerArtifact {
 		return ARTIFACT_DESCRIPTION;
 	}
 	
+	// 아티팩트 조건 속성인지 확인
 	public boolean isTargetElement(String skillElement) {
 		return TARGET_ELEMENT.equals(skillElement);
 	}
@@ -57,7 +61,7 @@ public class DruidBeltArtifact implements PlayerArtifact {
 	public int getDamageBonus() {
 		return BattleConstants.getDruidBeltBonus();
 	}
-	
+	// 조건 성립 시, 추가 데미지 반환
 	public int calculateDamageBonus(String skillElement) {
 		if(isTargetElement(skillElement)) {
 			return getDamageBonus();

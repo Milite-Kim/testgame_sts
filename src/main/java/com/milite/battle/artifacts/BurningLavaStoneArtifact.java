@@ -5,9 +5,12 @@ import com.milite.battle.BattleUnit;
 import com.milite.constants.BattleConstants;
 
 public class BurningLavaStoneArtifact implements PlayerArtifact {
+	/* 전반적인 내용은 PlayerArtifact의 주석 확인
+	 * 아티팩트의 내용은 아래의 내용 확인
+	 * */
 	private static final String ARTIFACT_NAME = "작열하는 용암석";
 	private static final String ARTIFACT_DESCRIPTION = "불속성 스킬 카드의 데미지 2 증가";
-	private static final String TARGET_ELEMENT = "Fire";
+	private static final String TARGET_ELEMENT = "Fire"; // 아티팩트가 적용되는 속성
 	@Override
 	public void onPlayerAttack(BattleUnit attacker, BattleUnit target, BattleContext context) {
 

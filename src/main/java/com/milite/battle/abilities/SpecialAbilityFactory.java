@@ -3,6 +3,10 @@ package com.milite.battle.abilities;
 import java.util.*;
 
 public class SpecialAbilityFactory {
+	/* 
+	 * 특수 능력을 생성해서 연결하기 위한 부분
+	 * 특수능력 이름과 해당 클래스를 연결하는 클래스
+	 * */
 	private static final Map<String, SpecialAbility> abilities = new HashMap<>();
 
 	static {

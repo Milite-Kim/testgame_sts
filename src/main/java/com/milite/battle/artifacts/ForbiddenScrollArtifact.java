@@ -5,6 +5,10 @@ import com.milite.battle.BattleUnit;
 import com.milite.constants.BattleConstants;
 
 public class ForbiddenScrollArtifact implements PlayerArtifact {
+	/* 전반적인 내용은 PlayerArtifact의 주석 확인
+	 * 아티팩트의 내용은 아래의 내용 확인
+	 * 실제 배율 적용은 BattleSession에서 적용
+	 * */
 	private static final String ARTIFACT_NAME = "금단의 주문서";
 	private static final String ARTIFACT_DESCRIPTION = "우세 상성 공격 시, 배율 20% 증가 및 약세 상성 공격 시, 배율 20% 감소";
 
@@ -49,6 +53,7 @@ public class ForbiddenScrollArtifact implements PlayerArtifact {
 		return ARTIFACT_DESCRIPTION;
 	}
 
+	// 약세 상성인지 우세 상성인지 반환하는 메서드
 	public boolean hasElementAdvantage(double baseMultiplier) {
 		return baseMultiplier > 1.0;
 	}
@@ -57,6 +62,7 @@ public class ForbiddenScrollArtifact implements PlayerArtifact {
 		return baseMultiplier < 1.0;
 	}
 
+	// 각각의 경우에서 해당 보정 배율을 반환하는 메서드
 	public double getElementAdvantageBonus() {
 		return BattleConstants.getForbiddenScrollBonus();
 	}
