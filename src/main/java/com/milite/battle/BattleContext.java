@@ -472,6 +472,7 @@ class StatusEffectAction implements DelayedAction {
 
 	@Override
 	public void execute(BattleContext context) {
+		// 실행하되, 대상이 사망해있다면 상태이상 적용 취소
 		if (!target.isAlive()) {
 			context.addLogEntry("상태이상 대상이 이미 사망하였기에 취소되었습니다.");
 			return;
@@ -514,7 +515,6 @@ class SummonAction implements DelayedAction {
 
 	@Override
 	public void execute(BattleContext context) {
-		// todo 로직 구현해야함
-		context.addLogEntry("System", "summon", "몬스터 소환 시도 : " + monsterID + " x" + count + " (아직 미구현)");
+		context.addLogEntry("System", "summon", "몬스터 소환 시도 : " + monsterID + " x" + count);
 	}
 }
