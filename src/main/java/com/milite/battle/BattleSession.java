@@ -69,6 +69,7 @@ public class BattleSession {
 
 	public BattleResultDto battleTurn(BattleUnit attacker, List<BattleUnit> allUnits, Integer targetIndex,
 			SkillDto skill) {
+		// 플레이어가 하는 공격 처리(코드 수정으로 인해 호환안되는 코드 호환용)
 		BattleContext context = new BattleContext(this, this.currentTurn);
 		return battleTurn(attacker, allUnits, targetIndex, skill, context);
 	}
@@ -85,6 +86,7 @@ public class BattleSession {
 	private void executeAttackByType(String targetType, List<BattleUnit> validTargets, Integer targetIndex,
 			BattleUnit attacker, SkillDto skill, int attackerAtk, String actor, String actorJosa,
 			BattleState battleState, BattleContext context) {
+		// 스킬의 공격 타입에 따라 해당 공격 실행
 		switch (targetType) {
 		case "Pick":
 			if (targetIndex < validTargets.size()) {
@@ -113,6 +115,7 @@ public class BattleSession {
 
 	private void executeAttackOnTarget(BattleUnit attacker, BattleUnit target, SkillDto skill, int attackerAtk,
 			String actor, String actorJosa, BattleState battleState, BattleContext context) {
+		// 정해진 타겟을 향하여 공격 실행
 		int targetLuck = getTargetLuck(target);
 		boolean isHit = isAttacked(targetLuck);
 

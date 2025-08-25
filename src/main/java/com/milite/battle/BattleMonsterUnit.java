@@ -23,7 +23,7 @@ public class BattleMonsterUnit implements BattleUnit {
 	private Map<String, Integer> statusEffects = new HashMap<>();
 
 	private SpecialAbility specialAbility;
-	private int formCount = 0;
+	private int formCount = 0; // 쓸 예정 없음(약점 속성으로 공격 받을 시, 값이 바뀌며 FormChange와 ModeSwitch 트리거용으로 쓸 예정)
 
 	public BattleMonsterUnit(MonsterDto dto) {
 		this.ID = dto.getMonsterID();
@@ -39,6 +39,7 @@ public class BattleMonsterUnit implements BattleUnit {
 		this.specialAbility = SpecialAbilityFactory.getAbility(this.special);
 	}
 
+	// 아래의 execute는 abilities 폴더의 SpecialAbility 파일의 주석 참고
 	public void executeOnAttack(BattleUnit target, BattleContext context) {
 		if (specialAbility != null) {
 			specialAbility.onAttack(this, target, context);
@@ -84,11 +85,6 @@ public class BattleMonsterUnit implements BattleUnit {
 		this.formCount = (this.formCount + 1) % 2;
 	}
 
-	/*
-	 * private int calcATK(MonsterDto dto) { int atk = (int) (Math.random() *
-	 * (dto.getMax_atk() - dto.getMin_atk())) + dto.getMin_atk(); return atk; }
-	 */ // 현재 사용 안하는 함수
-
 	@Override
 	public String getName() {
 		return this.name;
@@ -116,6 +112,7 @@ public class BattleMonsterUnit implements BattleUnit {
 
 	@Override
 	public boolean hasSwift() {
+		// 선공 특수 능력은 별도의 메서드에서 처리하기 때문에 해당 능력을 보유하고 있는지 반환하는 메서드
 		return "Swift".equals(this.special);
 	}
 

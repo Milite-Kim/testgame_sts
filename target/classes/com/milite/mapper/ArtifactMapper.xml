@@ -29,7 +29,15 @@
 		Description as
 		ArtifactDescription
 		from ArtifactDB
-		where Name = #{ArtifactName}
+		where Name =
+		#{ArtifactName}
+	</select>
+
+	<select id="getAvailableArtifacts"
+		resultType="com.milite.dto.ArtifactDto">
+		select ID as ArtifactName, Name as ArtifactName, Job as ArtifactJob, Session
+		as ArtifactSession, Effect as ArtifactEffect, Description as
+		ArtifactDescription from ArtifactDB where (Session = #{session} or Session = 'None') 
 	</select>
 </mapper>
 	

@@ -13,7 +13,7 @@
 	<select id="getPlayerInfo" resultType="com.milite.dto.PlayerDto">
 		select
 		Player_ID as
-		PlayerID,
+		playerID,
 		Using_Character,
 		curr_hp,
 		max_hp,
@@ -40,6 +40,8 @@
 			<if test="max_hp != null">max_hp = #{max_hp},</if>
 			<if test="atk != null">atk = #{atk},</if>
 			<if test="luck != null">luck = #{luck},</if>
+			<if test="Own_Skill != null"> Own_Skill = #{Own_Skill},</if>
+			<if test="Own_Artifact != null"> Own_Artifact = #{Own_Artifact},</if>
 		</trim>
 		<where>
 			<if test="Player_ID != null">Player_ID = #{PlayerID}</if>
